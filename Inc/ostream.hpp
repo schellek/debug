@@ -17,13 +17,13 @@ class ostream
 /**********************************************************************************************************************/
 public:
   ostream() = delete;
-  ostream(void (*Write)(const char *p_str, uint16_t len));
+  ostream(void (*write)(const char *p_str, uint16_t len));
 
 /**********************************************************************************************************************/
 /************************************************** Static Methods ****************************************************/
 /**********************************************************************************************************************/
 public:
-  void (&Write)(const char *p_str, uint16_t len);
+  void (&write)(const char *p_str, uint16_t len);
   void vprintf(const char *p_str, va_list argList);
   void printf(const char *p_str, ...);
 

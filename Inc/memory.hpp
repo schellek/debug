@@ -33,7 +33,8 @@ public:
 
   friend ostream &operator<<(ostream &stream, bin obj)
   {
-    constexpr uint8_t rowBitmask = 0x07U;
+    static constexpr uint8_t rowBitmask = 0x07U;
+
     const void *lastObjByte = obj.m_start + obj.size() - 1U;
     const uint8_t *memoryStart =
         reinterpret_cast<const uint8_t *>(reinterpret_cast<uintptr_t>(obj.m_start) & ~rowBitmask);
@@ -96,11 +97,12 @@ public:
 
   friend ostream &operator<<(ostream &stream, hex obj)
   {
-    constexpr char lowercaseHexLookup[16] =
+    static constexpr char lowercaseHexLookup[16] =
       { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
-    constexpr uint8_t cellBitmask = 0x3U;
-    constexpr uint8_t rowBitmask = 0x1FU;
+    static constexpr uint8_t cellBitmask = 0x3U;
+    static constexpr uint8_t rowBitmask = 0x1FU;
+
     const uint8_t *lastObjByte = obj.m_start + obj.size() - 1U;
     const uint8_t *memoryStart =
         reinterpret_cast<const uint8_t *>(reinterpret_cast<uintptr_t>(obj.m_start) & ~rowBitmask);

@@ -4,7 +4,7 @@
 
 void Debug_Write(const char *p_str, uint16_t len)
 {
-  debug::cout.Write(p_str, len);
+  debug::cout.write(p_str, len);
 }
 
 void Debug_Printf(const char *p_str, ...)

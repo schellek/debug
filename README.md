@@ -9,7 +9,7 @@ For example it can be used as follows:
 ```cmake
 IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
   add_definitions(-DDEBUG)
-  add_subdirectory(path/to/debug debug)
+  add_subdirectory(path/to/debug)
 ENDIF()
 ```
 

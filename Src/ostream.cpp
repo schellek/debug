@@ -6,22 +6,23 @@
 namespace debug
 {
 
-ostream::ostream(void (*Write)(const char *p_data, uint16_t len)) : Write(*Write)
+ostream::ostream(void (*write)(const char *p_data, uint16_t len)) : write(*write)
 {
-  if (Write == nullptr)
+  if (write == nullptr)
     exit(EXIT_FAILURE);
 }
 
 void ostream::vprintf(const char *p_str, va_list argList)
 {
-  constexpr uint16_t u8  = static_cast<uint16_t>('u' | ('8' << 8U));
-  constexpr uint32_t u16 = static_cast<uint32_t>('u' | ('1' << 8U) | ('6' << 16U));
-  constexpr uint32_t u32 = static_cast<uint32_t>('u' | ('3' << 8U) | ('2' << 16U));
-  constexpr uint32_t u64 = static_cast<uint32_t>('u' | ('3' << 8U) | ('2' << 16U));
-  constexpr uint16_t i8  = static_cast<uint16_t>('i' | ('8' << 8U));
-  constexpr uint32_t i16 = static_cast<uint32_t>('i' | ('1' << 8U) | ('6' << 16U));
-  constexpr uint32_t i32 = static_cast<uint32_t>('i' | ('3' << 8U) | ('2' << 16U));
-  constexpr uint32_t i64 = static_cast<uint32_t>('i' | ('6' << 8U) | ('4' << 16U));
+  static constexpr uint16_t u8  = static_cast<uint16_t>('u' | ('8' << 8U));
+  static constexpr uint32_t u16 = static_cast<uint32_t>('u' | ('1' << 8U) | ('6' << 16U));
+  static constexpr uint32_t u32 = static_cast<uint32_t>('u' | ('3' << 8U) | ('2' << 16U));
+  static constexpr uint32_t u64 = static_cast<uint32_t>('u' | ('3' << 8U) | ('2' << 16U));
+  static constexpr uint16_t i8  = static_cast<uint16_t>('i' | ('8' << 8U));
+  static constexpr uint32_t i16 = static_cast<uint32_t>('i' | ('1' << 8U) | ('6' << 16U));
+  static constexpr uint32_t i32 = static_cast<uint32_t>('i' | ('3' << 8U) | ('2' << 16U));
+  static constexpr uint32_t i64 = static_cast<uint32_t>('i' | ('6' << 8U) | ('4' << 16U));
+
 
   uint32_t argType;
 
@@ -135,14 +136,14 @@ void ostream::vprintf(const char *p_str, va_list argList)
     {
       arg.u32 = va_arg(argList, uint32_t);
       auto[ data, len ] = uint32_t2hexstring(arg.u32, false);
-      Write(data, len);
+      write(data, len);
       p_str += 1U;
     }
     else if (static_cast<char>(argType) == 'X')
     {
       arg.u32 = va_arg(argList, uint32_t);
       auto[ data, len ] = uint32_t2hexstring(arg.u32, true);
-      Write(data, len);
+      write(data, len);
       p_str += 1U;
     }
     else if (static_cast<char>(argType) == 'n')
@@ -173,76 +174,76 @@ void ostream::printf(const char *p_str, ...)
 ostream& ostream::operator<<(uint8_t value)
 {
   auto[ data, len ] = uint8_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(uint16_t value)
 {
   auto[ data, len ] = uint16_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(uint32_t value)
 {
   auto[ data, len ] = uint32_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(uint64_t value)
 {
   auto[ data, len ] = uint64_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(int8_t value)
 {
   auto[ data, len ] = int8_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(int16_t value)
 {
   auto[ data, len ] = int16_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(int32_t value)
 {
   auto[ data, len ] = int32_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(int64_t value)
 {
   auto[ data, len ] = int64_t2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(float value)
 {
   auto[ data, len ] = float2string(value);
-  Write(data, len);
+  write(data, len);
   return *this;
 }
 
 ostream& ostream::operator<<(char value)
 {
-  Write(&value, 1U);
+  write(&value, 1U);
   return *this;
 }
 
 ostream& ostream::operator<<(const char* p_data)
 {
   uint16_t len = strlen(p_data);
-  Write(p_data, len);
+  write(p_data, len);
   return *this;
 }
 
@@ -256,8 +257,8 @@ ostream& ostream::operator<<(const void *ptr)
 #error "Pointer size couldn't be determined"
 #endif
 
-  Write("0x", 2U);
-  Write(data, len);
+  write("0x", 2U);
+  write(data, len);
   return *this;
 }
 
@@ -269,7 +270,7 @@ ostream& ostream::operator<<(void (&function)(ostream& stream))
 
 void endl(ostream& stream)
 {
-  stream.Write("\r\n", 2U);
+  stream.write("\r\n", 2U);
 }
 
 } // debug

@@ -18,6 +18,12 @@ union ieee_754_single
   uint32_t w;
 };
 
+constexpr char uppercaseHexLookup[16] =
+  { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+constexpr char lowercaseHexLookup[16] =
+  { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+
 template<typename intx_t, intx_t startvalue>
 string int2string(intx_t value)
 {
@@ -52,10 +58,7 @@ string int2string(intx_t value)
 template<typename intx_t, uint8_t bytes>
 string int2hexstring(intx_t value, bool uppercaseLetters)
 {
-  constexpr char uppercaseHexLookup[16] =
-    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-  constexpr char lowercaseHexLookup[16] =
-    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+  const char *const hexLoopup = uppercaseLetters ? uppercaseHexLookup : lowercaseHexLookup;
 
   uint8_t nibbleValue;
   char *data = g_returnBuffer;
@@ -73,7 +76,7 @@ string int2hexstring(intx_t value, bool uppercaseLetters)
       continue;
 
     first = false;
-    data[len++] = uppercaseLetters ? uppercaseHexLookup[nibbleValue] : lowercaseHexLookup[nibbleValue];
+    data[len++] = hexLoopup[nibbleValue];
   }
 
   if (first == true)
