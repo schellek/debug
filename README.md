@@ -14,8 +14,20 @@ IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
 ENDIF()
 ```
 
-#### someFile.c
+#### debug.cpp
 ```c++
+#include <cstdint>
+
+#ifdef DEBUG
+debug::ostream debug::cout([](const char *p_str, uint16_t len)
+{
+  std::cout.write(p_str, len);
+});
+#endif
+```
+
+#### someFile.c
+```c
 #ifdef DEBUG
 #include "debugio.h"
 #define DEBUG_PRINTF(...)   Debug_Printf(__VA_ARGS__)
@@ -39,10 +51,10 @@ void HelloWorld(void)
     DEBUG_LOG("Hello again!\r\n");
 }
 
-void SetArrayValue(size_t idx, int value)
+void SetArrayValue(int idx, int value)
 {
     /* The assert statement below is only checked when DEBUG is defined */
-    ASSERT(idx < ARRAY_LEN);
+    ASSERT((idx > -1) && (idx < ARRAY_LEN));
     array[idx] = value;
 }
 ```
