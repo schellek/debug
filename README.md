@@ -19,7 +19,7 @@ ENDIF()
 #include <cstdint>
 
 #ifdef DEBUG
-debug::ostream debug::cout([](const char *p_str, uint16_t len)
+debug::ostream debug::cout([](const char *p_str, uint16_t len) -> void
 {
   std::cout.write(p_str, len);
 });
