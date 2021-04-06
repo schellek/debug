@@ -3,6 +3,7 @@
 This repository contains a lightweigt implementation of `stdio` and `ostream` without the use of heap-allocations.
 These debug files are mainly implemented for microcontrollers, however they are platform independent.
 
+[![CMake](https://github.com/schellek/debug/actions/workflows/cmake.yml/badge.svg)](https://github.com/schellek/debug/actions/workflows/cmake.yml)
 
 For example it can be used as follows:
 #### CMakeFiles.txt
