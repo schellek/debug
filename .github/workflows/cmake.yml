@@ -43,6 +43,7 @@ jobs:
       shell: bash
       # Execute the just built executable
       run: ./Example
+      if: always()
       
     - name: Configure CMake (Release)
       # Use a bash shell so we can use the same syntax for environment variable
