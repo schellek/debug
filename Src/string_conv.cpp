@@ -52,6 +52,12 @@ string int2string(intx_t value)
     data[len++] = digit + '0';
   }
 
+  if (first == true)
+  {
+    data[0] = '0';
+    len = 1U;
+  }
+
   return { data, len };
 }
 
