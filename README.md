@@ -51,10 +51,10 @@ void HelloWorld(void)
     DEBUG_LOG("Hello again!\r\n");
 }
 
-void SetArrayValue(int idx, int value)
+void SetArrayValue(unsigned int idx, int value)
 {
     /* The assert statement below is only checked when DEBUG is defined */
-    ASSERT((idx > -1) && (idx < ARRAY_LEN));
+    ASSERT(idx < ARRAY_LEN);
     array[idx] = value;
 }
 ```
