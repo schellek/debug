@@ -43,7 +43,6 @@ jobs:
       shell: bash
       # Execute the just built executable
       run: ./Example
-      if: always()
       
     - name: Configure CMake (Release)
       # Use a bash shell so we can use the same syntax for environment variable
@@ -54,6 +53,7 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: cmake .. -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+      if: always()
 
     - name: Build (Release)
       working-directory: ${{github.workspace}}/Example/build
