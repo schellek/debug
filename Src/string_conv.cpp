@@ -1,6 +1,8 @@
 #include "string_conv.hpp"
 #include <cstring>
 
+using namespace std::string_view_literals;
+
 namespace debug
 {
 
@@ -25,7 +27,7 @@ constexpr char lowercaseHexLookup[16] =
   { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 template<typename intx_t, intx_t startvalue>
-string int2string(intx_t value)
+std::string_view int2string(intx_t value)
 {
   char digit;
   char *data = g_returnBuffer;
@@ -58,11 +60,11 @@ string int2string(intx_t value)
     len = 1U;
   }
 
-  return { data, len };
+  return std::string_view{ data, len };
 }
 
 template<typename intx_t, uint8_t bytes>
-string int2hexstring(intx_t value, bool uppercaseLetters)
+std::string_view int2hexstring(intx_t value, bool uppercaseLetters)
 {
   const char *const hexLoopup = uppercaseLetters ? uppercaseHexLookup : lowercaseHexLookup;
 
@@ -91,10 +93,10 @@ string int2hexstring(intx_t value, bool uppercaseLetters)
     len = 1U;
   }
 
-  return { data, len };
+  return std::string_view{ data, len };
 }
 
-string float2string(float value)
+std::string_view float2string(float value)
 {
   const ieee_754_single *number = reinterpret_cast<ieee_754_single *>(&value);
   int8_t exponent = number->b.exponent - 127;
@@ -102,58 +104,48 @@ string float2string(float value)
   char tempBuffer[g_returnBufferLen];
   char *data = tempBuffer;
   uint16_t len = 0U;
-  string retstr;
+  std::string_view retstr;
 
   if (number->w == 0x7F800000U)
-  {
-    data = const_cast<char *>("inf");
-    len = 3U;
-  }
-  else if (number->w == 0xFF800000U)
-  {
-    data = const_cast<char *>("-inf");
-    len = 4U;
-  }
-  else if ((number->w & 0x7F800000) == 0x7F800000)
-  {
-    data = const_cast<char *>("nan");
-    len = 3U;
-  }
-  else
-  {
-    if (number->b.sign == 1U)
-      data[len++] = '-';
+    return "inf"sv;
 
-    if (mantissa != 0U)
-    {
-      retstr = uint32_t2string(mantissa);
-    }
-    memcpy(reinterpret_cast<void *>(&data[len]), reinterpret_cast<const void *>(retstr.data), retstr.len);
-    len += retstr.len;
-  }
+  if (number->w == 0xFF800000U)
+    return "-inf"sv;
+
+  if ((number->w & 0x7F800000) == 0x7F800000)
+    return "nan"sv;
+
+  if (number->b.sign == 1U)
+    data[len++] = '-';
+
+  if (mantissa != 0U)
+    retstr = uint32_t2string(mantissa);
+
+  memcpy(reinterpret_cast<void *>(&data[len]), reinterpret_cast<const void *>(retstr.data()), retstr.size());
+  len += retstr.size();
 
   data = g_returnBuffer;
   memcpy(reinterpret_cast<void *>(data), reinterpret_cast<const void *>(tempBuffer), len);
 
-  return { data, len };
+  return std::string_view{ data, len };
 }
 
-string (&uint8_t2string)(uint8_t value)                             = int2string<uint8_t,  100U>;
-string (&uint16_t2string)(uint16_t value)                           = int2string<uint16_t, 10000U>;
-string (&uint32_t2string)(uint32_t value)                           = int2string<uint32_t, 1000000000U>;
-string (&uint64_t2string)(uint64_t value)                           = int2string<uint64_t, 10000000000000000000U>;
-string (&int8_t2string)(int8_t value)                               = int2string<int8_t,   100>;
-string (&int16_t2string)(int16_t value)                             = int2string<int16_t,  10000>;
-string (&int32_t2string)(int32_t value)                             = int2string<int32_t,  1000000000>;
-string (&int64_t2string)(int64_t value)                             = int2string<int64_t,  1000000000000000000>;
+std::string_view (&uint8_t2string)(uint8_t value)                             = int2string<uint8_t,  100U>;
+std::string_view (&uint16_t2string)(uint16_t value)                           = int2string<uint16_t, 10000U>;
+std::string_view (&uint32_t2string)(uint32_t value)                           = int2string<uint32_t, 1000000000U>;
+std::string_view (&uint64_t2string)(uint64_t value)                           = int2string<uint64_t, 10000000000000000000U>;
+std::string_view (&int8_t2string)(int8_t value)                               = int2string<int8_t,   100>;
+std::string_view (&int16_t2string)(int16_t value)                             = int2string<int16_t,  10000>;
+std::string_view (&int32_t2string)(int32_t value)                             = int2string<int32_t,  1000000000>;
+std::string_view (&int64_t2string)(int64_t value)                             = int2string<int64_t,  1000000000000000000>;
 
-string (&uint8_t2hexstring)(uint8_t value,   bool uppercaseLetters) = int2hexstring<uint8_t,  1U>;
-string (&uint16_t2hexstring)(uint16_t value, bool uppercaseLetters) = int2hexstring<uint16_t, 2U>;
-string (&uint32_t2hexstring)(uint32_t value, bool uppercaseLetters) = int2hexstring<uint32_t, 4U>;
-string (&uint64_t2hexstring)(uint64_t value, bool uppercaseLetters) = int2hexstring<uint64_t, 8U>;
-string (&int8_t2hexstring)(int8_t value,     bool uppercaseLetters) = int2hexstring<int8_t,   1U>;
-string (&int16_t2hexstring)(int16_t value,   bool uppercaseLetters) = int2hexstring<int16_t,  2U>;
-string (&int32_t2hexstring)(int32_t value,   bool uppercaseLetters) = int2hexstring<int32_t,  4U>;
-string (&int64_t2hexstring)(int64_t value,   bool uppercaseLetters) = int2hexstring<int64_t,  8U>;
+std::string_view (&uint8_t2hexstring)(uint8_t value,   bool uppercaseLetters) = int2hexstring<uint8_t,  1U>;
+std::string_view (&uint16_t2hexstring)(uint16_t value, bool uppercaseLetters) = int2hexstring<uint16_t, 2U>;
+std::string_view (&uint32_t2hexstring)(uint32_t value, bool uppercaseLetters) = int2hexstring<uint32_t, 4U>;
+std::string_view (&uint64_t2hexstring)(uint64_t value, bool uppercaseLetters) = int2hexstring<uint64_t, 8U>;
+std::string_view (&int8_t2hexstring)(int8_t value,     bool uppercaseLetters) = int2hexstring<int8_t,   1U>;
+std::string_view (&int16_t2hexstring)(int16_t value,   bool uppercaseLetters) = int2hexstring<int16_t,  2U>;
+std::string_view (&int32_t2hexstring)(int32_t value,   bool uppercaseLetters) = int2hexstring<int32_t,  4U>;
+std::string_view (&int64_t2hexstring)(int64_t value,   bool uppercaseLetters) = int2hexstring<int64_t,  8U>;
 
 } // debug

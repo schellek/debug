@@ -3,14 +3,23 @@
 #include <cstring>
 #include <cstdlib>
 
+using namespace std::string_view_literals;
+
 namespace debug
 {
 
-ostream::ostream(void (*write)(const char *p_data, uint16_t len)) : write(*write)
+ostream::ostream(void (*_write)(const char *p_data, uint16_t len)) : _write(*_write)
 {
-  if (write == nullptr)
+  if (_write == nullptr)
     exit(EXIT_FAILURE);
 }
+
+void ostream::write(const char *p_str, uint16_t len)
+{ _write(p_str, len); }
+
+void ostream::write(std::string_view str)
+{ _write(str.data(), str.size()); }
+
 
 void ostream::vprintf(const char *p_str, va_list argList)
 {
@@ -22,7 +31,6 @@ void ostream::vprintf(const char *p_str, va_list argList)
   static constexpr uint32_t i16 = static_cast<uint32_t>('i' | ('1' << 8U) | ('6' << 16U));
   static constexpr uint32_t i32 = static_cast<uint32_t>('i' | ('3' << 8U) | ('2' << 16U));
   static constexpr uint32_t i64 = static_cast<uint32_t>('i' | ('6' << 8U) | ('4' << 16U));
-
 
   uint32_t argType;
 
@@ -135,15 +143,13 @@ void ostream::vprintf(const char *p_str, va_list argList)
     else if (static_cast<char>(argType) == 'x')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      auto[ data, len ] = uint32_t2hexstring(arg.u32, false);
-      write(data, len);
+      write(uint32_t2hexstring(arg.u32, false));
       p_str += 1U;
     }
     else if (static_cast<char>(argType) == 'X')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      auto[ data, len ] = uint32_t2hexstring(arg.u32, true);
-      write(data, len);
+      write(uint32_t2hexstring(arg.u32, true));
       p_str += 1U;
     }
     else if (static_cast<char>(argType) == 'n')
@@ -173,64 +179,55 @@ void ostream::printf(const char *p_str, ...)
 
 ostream& ostream::operator<<(uint8_t value)
 {
-  auto[ data, len ] = uint8_t2string(value);
-  write(data, len);
+  write(uint8_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint16_t value)
 {
-  auto[ data, len ] = uint16_t2string(value);
-  write(data, len);
+  write(uint16_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint32_t value)
 {
-  auto[ data, len ] = uint32_t2string(value);
-  write(data, len);
+  write(uint32_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint64_t value)
 {
-  auto[ data, len ] = uint64_t2string(value);
-  write(data, len);
+  write(uint64_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int8_t value)
 {
-  auto[ data, len ] = int8_t2string(value);
-  write(data, len);
+  write(int8_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int16_t value)
 {
-  auto[ data, len ] = int16_t2string(value);
-  write(data, len);
+  write(int16_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int32_t value)
 {
-  auto[ data, len ] = int32_t2string(value);
-  write(data, len);
+  write(int32_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int64_t value)
 {
-  auto[ data, len ] = int64_t2string(value);
-  write(data, len);
+  write(int64_t2string(value));
   return *this;
 }
 
 ostream& ostream::operator<<(float value)
 {
-  auto[ data, len ] = float2string(value);
-  write(data, len);
+  write(float2string(value));
   return *this;
 }
 
@@ -242,23 +239,23 @@ ostream& ostream::operator<<(char value)
 
 ostream& ostream::operator<<(const char* p_data)
 {
-  uint16_t len = strlen(p_data);
-  write(p_data, len);
+  write(std::string_view{ p_data });
   return *this;
 }
 
 ostream& ostream::operator<<(const void *ptr)
 {
+  std::string_view hexstring;
 #if UINTPTR_MAX == UINT32_MAX
-  auto[ data, len ] = uint32_t2hexstring(reinterpret_cast<uint32_t>(ptr), false);
+  hexstring = uint32_t2hexstring(reinterpret_cast<uint32_t>(ptr), false);
 #elif UINTPTR_MAX == UINT64_MAX
-  auto[ data, len ] = uint64_t2hexstring(reinterpret_cast<uint64_t>(ptr), false);
+  hexstring = uint64_t2hexstring(reinterpret_cast<uint64_t>(ptr), false);
 #else
 #error "Pointer size couldn't be determined"
 #endif
 
-  write("0x", 2U);
-  write(data, len);
+  write("0x"sv);
+  write(hexstring);
   return *this;
 }
 
@@ -270,7 +267,7 @@ ostream& ostream::operator<<(void (&function)(ostream& stream))
 
 void endl(ostream& stream)
 {
-  stream.write("\r\n", 2U);
+  stream.write("\r\n"sv);
 }
 
 } // debug
