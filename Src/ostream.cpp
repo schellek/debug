@@ -8,20 +8,22 @@ using namespace std::string_view_literals;
 namespace debug
 {
 
-ostream::ostream(void (*_write)(const char *p_data, uint16_t len)) : _write(*_write)
+ostream::ostream(void (*_write)(const char *data, uint16_t len)) : _write(*_write)
 {
   if (_write == nullptr)
     exit(EXIT_FAILURE);
 }
 
-void ostream::write(const char *p_str, uint16_t len)
-{ _write(p_str, len); }
+void ostream::write(const char *str, uint16_t len)
+{ _write(str, len); }
 
-void ostream::write(std::string_view str)
+void ostream::write(std::string_view &str)
 { _write(str.data(), str.size()); }
 
+void ostream::write(std::string_view &&str)
+{ _write(str.data(), str.size()); }
 
-void ostream::vprintf(const char *p_str, va_list argList)
+void ostream::vprintf(const char *str, va_list argList)
 {
   static constexpr uint16_t u8  = static_cast<uint16_t>('u' | ('8' << 8U));
   static constexpr uint32_t u16 = static_cast<uint32_t>('u' | ('1' << 8U) | ('6' << 16U));
@@ -41,187 +43,187 @@ void ostream::vprintf(const char *p_str, va_list argList)
     int64_t i64;
     uint64_t u64;
     double f64;
-    const void *ptr;
+    const void *addr;
   } arg;
 
-  while (*p_str != '\0')
+  while (*str != '\0')
   {
-    if (*p_str != '%')
+    if (*str != '%')
     {
-      *this << *p_str;
-      p_str++;
+      *this << *str;
+      str++;
       continue;
     }
 
-    p_str++;
-    argType = p_str[0] | (p_str[1] << 8U) | (p_str[2] << 16U);
+    str++;
+    argType = str[0] | (str[1] << 8U) | (str[2] << 16U);
 
     if (static_cast<uint16_t>(argType) == u8)
     {
       arg.u32 = va_arg(argList, uint32_t);
       *this << static_cast<uint8_t>(arg.u32);
-      p_str += 2U;
+      str += 2U;
     }
     else if (argType == u16)
     {
       arg.u32 = va_arg(argList, uint32_t);
       *this << static_cast<uint16_t>(arg.u32);
-      p_str += 3U;
+      str += 3U;
     }
     else if (argType == u32)
     {
       arg.u32 = va_arg(argList, uint32_t);
       *this << arg.u32;
-      p_str += 3U;
+      str += 3U;
     }
     else if (argType == u64)
     {
       arg.u64 = va_arg(argList, uint64_t);
       *this << arg.u64;
-      p_str += 3U;
+      str += 3U;
     }
     else if (static_cast<uint16_t>(argType) == i8)
     {
       arg.i32 = va_arg(argList, int32_t);
       *this << static_cast<int8_t>(arg.i32);
-      p_str += 2U;
+      str += 2U;
     }
     else if (argType == i16)
     {
       arg.i32 = va_arg(argList, int32_t);
       *this << static_cast<int16_t>(arg.i32);
-      p_str += 3U;
+      str += 3U;
     }
     else if (argType == i32)
     {
       arg.i32 = va_arg(argList, int32_t);
       *this << arg.i32;
-      p_str += 3U;
+      str += 3U;
     }
     else if (argType == i64)
     {
       arg.i64 = va_arg(argList, int64_t);
       *this << arg.i64;
-      p_str += 3U;
+      str += 3U;
     }
     else if (static_cast<char>(argType) == 'u')
     {
       arg.u32 = va_arg(argList, uint32_t);
       *this << arg.u32;
-      p_str += 1U;
+      str += 1U;
     }
     else if ((static_cast<char>(argType) == 'd') || (static_cast<char>(argType) == 'i'))
     {
       arg.i32 = va_arg(argList, int32_t);
       *this << arg.i32;
-      p_str += 1U;
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'f' || static_cast<char>(argType) == 'F')
     {
       arg.f64 = va_arg(argList, double);
       *this << static_cast<float>(arg.f64);
-      p_str += 1U;
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'c')
     {
       arg.i32 = va_arg(argList, int32_t);
       *this << static_cast<char>(arg.i32);
-      p_str += 1U;
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 's')
     {
-      arg.ptr = va_arg(argList, const void *);
-      *this << reinterpret_cast<const char *>(arg.ptr);
-      p_str += 1U;
+      arg.addr = va_arg(argList, const void *);
+      *this << reinterpret_cast<const char *>(arg.addr);
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'p')
     {
-      arg.ptr = va_arg(argList, void *);
-      *this << arg.ptr;
-      p_str += 1U;
+      arg.addr = va_arg(argList, void *);
+      *this << arg.addr;
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'x')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      write(uint32_t2hexstring(arg.u32, false));
-      p_str += 1U;
+      write(int2hexstr(arg.u32, false));
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'X')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      write(uint32_t2hexstring(arg.u32, true));
-      p_str += 1U;
+      write(int2hexstr(arg.u32, true));
+      str += 1U;
     }
     else if (static_cast<char>(argType) == 'n')
     {
-      arg.ptr = reinterpret_cast<const int *>(va_arg(argList, int32_t *));
-      p_str += 1U;
+      arg.addr = reinterpret_cast<const int *>(va_arg(argList, int32_t *));
+      str += 1U;
     }
     else if (static_cast<char>(argType) == '%')
     {
       *this << static_cast<char>(argType);
-      p_str += 1U;
+      str += 1U;
     }
     else
     {
-      p_str += 1U;
+      str += 1U;
     }
   }
 }
 
-void ostream::printf(const char *p_str, ...)
+void ostream::printf(const char *str, ...)
 {
   va_list argList;
-  va_start(argList, p_str);
-  vprintf(p_str, argList);
+  va_start(argList, str);
+  vprintf(str, argList);
   va_end(argList);
 }
 
 ostream& ostream::operator<<(uint8_t value)
 {
-  write(uint8_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint16_t value)
 {
-  write(uint16_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint32_t value)
 {
-  write(uint32_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(uint64_t value)
 {
-  write(uint64_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int8_t value)
 {
-  write(int8_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int16_t value)
 {
-  write(int16_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int32_t value)
 {
-  write(int32_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
 ostream& ostream::operator<<(int64_t value)
 {
-  write(int64_t2string(value));
+  write(int2str(value));
   return *this;
 }
 
@@ -237,22 +239,15 @@ ostream& ostream::operator<<(char value)
   return *this;
 }
 
-ostream& ostream::operator<<(const char* p_data)
+ostream& ostream::operator<<(const char* str)
 {
-  write(std::string_view{ p_data });
+  write(std::string_view{ str });
   return *this;
 }
 
-ostream& ostream::operator<<(const void *ptr)
+ostream& ostream::operator<<(const void *addr)
 {
-  std::string_view hexstring;
-#if UINTPTR_MAX == UINT32_MAX
-  hexstring = uint32_t2hexstring(reinterpret_cast<uint32_t>(ptr), false);
-#elif UINTPTR_MAX == UINT64_MAX
-  hexstring = uint64_t2hexstring(reinterpret_cast<uint64_t>(ptr), false);
-#else
-#error "Pointer size couldn't be determined"
-#endif
+  std::string_view hexstring = int2hexstr(reinterpret_cast<uintptr_t>(addr), false);
 
   write("0x"sv);
   write(hexstring);

@@ -6,9 +6,6 @@ using namespace std::string_view_literals;
 namespace debug
 {
 
-static constexpr uint16_t g_returnBufferLen = 25U;
-static char g_returnBuffer[g_returnBufferLen];
-
 union ieee_754_single
 {
   struct
@@ -19,82 +16,6 @@ union ieee_754_single
   } b;
   uint32_t w;
 };
-
-constexpr char uppercaseHexLookup[16] =
-  { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-
-constexpr char lowercaseHexLookup[16] =
-  { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-
-template<typename intx_t, intx_t startvalue>
-std::string_view int2string(intx_t value)
-{
-  char digit;
-  char *data = g_returnBuffer;
-  uint16_t len = 0U;
-  bool first = true;
-  intx_t div;
-
-  if (value < 0)
-  {
-    data[len++] = '-';
-    value = -value;
-  }
-
-  for (div = startvalue; div > 0; div /= 10)
-  {
-    digit = (value % (div * 10)) / div;
-
-    if (digit != 0)
-      /* Do nothing */;
-    else if (first == true)
-      continue;
-
-    first = false;
-    data[len++] = digit + '0';
-  }
-
-  if (first == true)
-  {
-    data[0] = '0';
-    len = 1U;
-  }
-
-  return std::string_view{ data, len };
-}
-
-template<typename intx_t, uint8_t bytes>
-std::string_view int2hexstring(intx_t value, bool uppercaseLetters)
-{
-  const char *const hexLoopup = uppercaseLetters ? uppercaseHexLookup : lowercaseHexLookup;
-
-  uint8_t nibbleValue;
-  char *data = g_returnBuffer;
-  uint16_t len = 0U;
-  bool first = true;
-  int8_t pos;
-
-  for (pos = bytes * 8 - 4; pos > -1; pos -= 4)
-  {
-    nibbleValue = (value >> pos) & 0x0000000F;
-
-    if (nibbleValue != 0U)
-      /* Do nothing */;
-    else if (first == true)
-      continue;
-
-    first = false;
-    data[len++] = hexLoopup[nibbleValue];
-  }
-
-  if (first == true)
-  {
-    data[0] = '0';
-    len = 1U;
-  }
-
-  return std::string_view{ data, len };
-}
 
 std::string_view float2string(float value)
 {
@@ -119,7 +40,7 @@ std::string_view float2string(float value)
     data[len++] = '-';
 
   if (mantissa != 0U)
-    retstr = uint32_t2string(mantissa);
+    retstr = int2str(mantissa);
 
   memcpy(reinterpret_cast<void *>(&data[len]), reinterpret_cast<const void *>(retstr.data()), retstr.size());
   len += retstr.size();
@@ -129,23 +50,5 @@ std::string_view float2string(float value)
 
   return std::string_view{ data, len };
 }
-
-std::string_view (&uint8_t2string)(uint8_t value)                             = int2string<uint8_t,  100U>;
-std::string_view (&uint16_t2string)(uint16_t value)                           = int2string<uint16_t, 10000U>;
-std::string_view (&uint32_t2string)(uint32_t value)                           = int2string<uint32_t, 1000000000U>;
-std::string_view (&uint64_t2string)(uint64_t value)                           = int2string<uint64_t, 10000000000000000000U>;
-std::string_view (&int8_t2string)(int8_t value)                               = int2string<int8_t,   100>;
-std::string_view (&int16_t2string)(int16_t value)                             = int2string<int16_t,  10000>;
-std::string_view (&int32_t2string)(int32_t value)                             = int2string<int32_t,  1000000000>;
-std::string_view (&int64_t2string)(int64_t value)                             = int2string<int64_t,  1000000000000000000>;
-
-std::string_view (&uint8_t2hexstring)(uint8_t value,   bool uppercaseLetters) = int2hexstring<uint8_t,  1U>;
-std::string_view (&uint16_t2hexstring)(uint16_t value, bool uppercaseLetters) = int2hexstring<uint16_t, 2U>;
-std::string_view (&uint32_t2hexstring)(uint32_t value, bool uppercaseLetters) = int2hexstring<uint32_t, 4U>;
-std::string_view (&uint64_t2hexstring)(uint64_t value, bool uppercaseLetters) = int2hexstring<uint64_t, 8U>;
-std::string_view (&int8_t2hexstring)(int8_t value,     bool uppercaseLetters) = int2hexstring<int8_t,   1U>;
-std::string_view (&int16_t2hexstring)(int16_t value,   bool uppercaseLetters) = int2hexstring<int16_t,  2U>;
-std::string_view (&int32_t2hexstring)(int32_t value,   bool uppercaseLetters) = int2hexstring<int32_t,  4U>;
-std::string_view (&int64_t2hexstring)(int64_t value,   bool uppercaseLetters) = int2hexstring<int64_t,  8U>;
 
 } // debug

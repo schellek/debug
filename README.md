@@ -19,9 +19,9 @@ ENDIF()
 #include <cstdint>
 
 #ifdef DEBUG
-debug::ostream debug::cout([](const char *p_str, uint16_t len) -> void
+debug::ostream debug::cout([](const char *str, uint16_t len) -> void
 {
-  std::cout.write(p_str, len);
+  std::cout.write(str, len);
 });
 #endif
 ```
