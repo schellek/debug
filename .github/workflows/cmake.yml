@@ -37,13 +37,13 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build .
-      
+
     - name: Execute (Debug)
       working-directory: ${{github.workspace}}/Example/build
       shell: bash
       # Execute the just built executable
       run: ./Example || echo "Fails as expected"
-      
+
     - name: Configure CMake (Release)
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
@@ -59,7 +59,7 @@ jobs:
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build .
-      
+
     - name: Execute (Release)
       working-directory: ${{github.workspace}}/Example/build
       shell: bash

@@ -1,7 +1,10 @@
+#pragma once
+
 #include <cstdint>
 #include <cstddef>
-#include "ostream.hpp"
-#include "string_conv.hpp"
+
+#include "fmt/ostream.hpp"
+#include "fmt/string_conv.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -14,7 +17,7 @@
 #define RESET_TEXT_COLOR()              stream << "\x1B[0m"
 #endif
 
-namespace debug
+namespace fmt
 {
 
 namespace memory
@@ -154,6 +157,6 @@ public:
   }
 };
 
-} // memory
+} // namespace memory
 
-} // debug
+} // namespace fmt

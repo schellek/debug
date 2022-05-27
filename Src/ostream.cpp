@@ -1,27 +1,30 @@
-#include "ostream.hpp"
-#include "string_conv.hpp"
 #include <cstring>
 #include <cstdlib>
 
+#include "fmt/ostream.hpp"
+#include "fmt/string_conv.hpp"
+
+
 using namespace std::string_view_literals;
 
-namespace debug
+namespace fmt
 {
 
-ostream::ostream(void (*_write)(const char *data, uint16_t len)) : _write(*_write)
+ostream::ostream(std::function<void(const char *, uint16_t)> write) : m_write{write}
 {
-  if (_write == nullptr)
+  if (!write)
     exit(EXIT_FAILURE);
 }
 
 void ostream::write(const char *str, uint16_t len)
-{ _write(str, len); }
+{
+  m_write(str, len);
+}
 
-void ostream::write(std::string_view &str)
-{ _write(str.data(), str.size()); }
-
-void ostream::write(std::string_view &&str)
-{ _write(str.data(), str.size()); }
+void ostream::write(const std::string_view &str)
+{
+  m_write(str.data(), str.size());
+}
 
 void ostream::vprintf(const char *str, va_list argList)
 {
@@ -133,7 +136,7 @@ void ostream::vprintf(const char *str, va_list argList)
     else if (static_cast<char>(argType) == 's')
     {
       arg.addr = va_arg(argList, const void *);
-      *this << reinterpret_cast<const char *>(arg.addr);
+      *this << ((nullptr != arg.addr) ? reinterpret_cast<const char *>(arg.addr) : "(null)");
       str += 1U;
     }
     else if (static_cast<char>(argType) == 'p')
@@ -145,13 +148,13 @@ void ostream::vprintf(const char *str, va_list argList)
     else if (static_cast<char>(argType) == 'x')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      write(int2hexstr(arg.u32, false));
+      *this << int2hexstr(arg.u32, false);
       str += 1U;
     }
     else if (static_cast<char>(argType) == 'X')
     {
       arg.u32 = va_arg(argList, uint32_t);
-      write(int2hexstr(arg.u32, true));
+      *this << int2hexstr(arg.u32, true);
       str += 1U;
     }
     else if (static_cast<char>(argType) == 'n')
@@ -179,60 +182,6 @@ void ostream::printf(const char *str, ...)
   va_end(argList);
 }
 
-ostream& ostream::operator<<(uint8_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(uint16_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(uint32_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(uint64_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(int8_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(int16_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(int32_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(int64_t value)
-{
-  write(int2str(value));
-  return *this;
-}
-
-ostream& ostream::operator<<(float value)
-{
-  write(float2string(value));
-  return *this;
-}
-
 ostream& ostream::operator<<(char value)
 {
   write(&value, 1U);
@@ -241,7 +190,13 @@ ostream& ostream::operator<<(char value)
 
 ostream& ostream::operator<<(const char* str)
 {
-  write(std::string_view{ str });
+  write(std::string_view{str});
+  return *this;
+}
+
+ostream& ostream::operator<<(const std::string_view &str)
+{
+  write(str);
   return *this;
 }
 
@@ -265,4 +220,4 @@ void endl(ostream& stream)
   stream.write("\r\n"sv);
 }
 
-} // debug
+} // namespace fmt

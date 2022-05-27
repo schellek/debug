@@ -1,10 +1,10 @@
-#include "ostream.hpp"
-#include "memory.hpp"
+#include "fmt/ostream.hpp"
+#include "fmt/memory.hpp"
 #include "defines.h"
 #include <cstdint>
 #include <iostream>
 
-debug::ostream debug::cout([](const char *str, uint16_t len) -> void
+fmt::ostream fmt::cout([](const char *str, uint16_t len) -> void
 {
   std::cout.write(str, len);
 });
@@ -18,13 +18,13 @@ int main()
   uint8_t num2 = 255;
   uint32_t array[] = { 0x12345678U, 0xFFFFFFFFU, 0x55555555, 0x00000000, 0x01020304 };
 
-  debug::cout << "Hello, this is an example! ";
-  debug::cout << "I can also print this: "<< num1 << " and this: " << num2 << debug::endl;
-  DEBUG_PRINTF("%s %c%c %u8 %p\r\n", "printf should also work just fine", ';', ')', 192, NULL);
+  fmt::cout << "Hello, this is an example! ";
+  fmt::cout << "I can also print this: "<< num1 << " and this: " << num2 << fmt::endl;
+  PRINTF("%s %c%c %u8 %p\r\n", "printf should also work just fine", ';', ')', 192, NULL);
 
-  debug::cout << debug::memory::bin(array);
-  debug::cout << debug::memory::hex(array);
+  fmt::cout << fmt::memory::bin(array);
+  fmt::cout << fmt::memory::hex(array);
 
   ASSERT(1 != 1);
-  DEBUG_LOG("This is never printed\r\n");
+  LOG("This is never printed\r\n");
 }
