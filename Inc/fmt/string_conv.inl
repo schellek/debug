@@ -3,7 +3,6 @@
 #include <cstring>
 
 #include "fmt/string_conv.hpp"
-#include "fmt/concepts.hpp"
 
 
 namespace fmt
@@ -46,106 +45,90 @@ union ieee_754_double
 constexpr uint16_t g_returnBufferLen = 25U;
 inline char g_returnBuffer[g_returnBufferLen];
 
-constexpr char uppercaseHexLookup[16] =
+constexpr char uppercaseHexLookup[16U] =
   { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
-constexpr char lowercaseHexLookup[16] =
+constexpr char lowercaseHexLookup[16U] =
   { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 std::string_view int2str(integral auto value)
 {
   using _int_t = decltype(value);
 
-  char digit;
-  char *data = g_returnBuffer;
-  uint16_t len = 0U;
-  bool first = true;
-  _int_t startvalue;
-  _int_t div;
-
-  if constexpr (sizeof(_int_t) == 1U)
-    startvalue = static_cast<_int_t>(100);
-
-  else if constexpr (sizeof(_int_t) == 2U)
-    startvalue = static_cast<_int_t>(10000);
-
-  else if constexpr (sizeof(_int_t) == 4U)
-    startvalue = static_cast<_int_t>(1000000000);
-
-  else if constexpr (std::is_same_v<_int_t, uint64_t>)
-    startvalue = static_cast<_int_t>(10000000000000000000U);
-
-  else if constexpr (std::is_same_v<_int_t, int64_t>)
-    startvalue = static_cast<_int_t>(1000000000000000000);
-
-  else
-    startvalue = static_cast<_int_t>(0);
-
-  if constexpr (std::is_unsigned_v<_int_t>)
-    /* Do nothing */;
-
-  else if (value < 0)
+  constexpr auto maxAmountDigits = []() constexpr -> uint8_t
   {
-    data[len++] = '-';
+    uint8_t amountDigits = 0U;
+
+    if constexpr (std::is_signed_v<_int_t>)
+      ++amountDigits;
+
+    for (_int_t i = std::numeric_limits<_int_t>::max(); i > 0; i /= 10)
+      ++amountDigits;
+
+    return amountDigits;
+  };
+
+  _int_t nextIterValue;
+  bool sign = false;
+
+  char *const end = g_returnBuffer + std::integral_constant<uint8_t, maxAmountDigits()>::value;
+  char *begin = end;
+
+  if (value < 0)
+  {
+    sign = true;
     value = -value;
   }
-
-  for (div = startvalue; div > 0; div /= 10)
+  else
   {
-    digit = (value % (div * 10)) / div;
-
-    if (digit != 0)
-      /* Do nothing */;
-
-    else if (first == true)
-      continue;
-
-    first = false;
-    data[len++] = digit + '0';
+    sign = false;
   }
 
-  if (first == true)
+  do
   {
-    data[0] = '0';
-    len = 1U;
-  }
+    nextIterValue = value / 10;
+    *(--begin) = (value - (nextIterValue * 10)) + '0';
+    value = nextIterValue;
+  } while (value);
 
-  return {data, len};
+  if (sign)
+    *(--begin) = '-';
+
+  return {begin, static_cast<size_t>(end - begin)};
 }
 
 std::string_view int2hexstr(integral auto value, bool uppercaseLetters)
 {
   using _int_t = decltype(value);
 
-  const char *const hexLoopup = uppercaseLetters ? uppercaseHexLookup : lowercaseHexLookup;
+  const char (&hexLookup)[16U] = uppercaseLetters ? uppercaseHexLookup : lowercaseHexLookup;
 
-  uint8_t nibbleValue;
-  char *data = g_returnBuffer;
-  uint16_t len = 0U;
-  bool first = true;
-  int8_t pos;
+  char *const end = g_returnBuffer + ((sizeof(_int_t) * 8U) / 4U);
+  char *begin = end;
 
-  for (pos = (sizeof(_int_t) * 8) - 4; pos > -1; pos -= 4)
+  do
   {
-    nibbleValue = (value >> pos) & 0xFU;
+    *(--begin) = hexLookup[value & 0xF];
+    value >>= 4U;
+  } while (value);
 
-    if (nibbleValue != 0U)
-      /* Do nothing */;
+  return {begin, static_cast<size_t>(end - begin)};
+}
 
-    else if (first == true)
-      continue;
+std::string_view int2octstr(integral auto value)
+{
+  using _int_t = decltype(value);
 
-    first = false;
-    data[len++] = hexLoopup[nibbleValue];
-  }
+  char *const end = g_returnBuffer + ((sizeof(_int_t) * 8U) / 3U) + 1;
+  char *begin = end;
 
-  if (first == true)
+  do
   {
-    data[0] = '0';
-    len = 1U;
-  }
+    *(--begin) = (value & 0x7) + '0';
+    value >>= 3U;
+  } while (value);
 
-  return {data, len};
+  return {begin, static_cast<size_t>(end - begin)};
 }
 
 std::string_view float2string(floating_point auto value)
