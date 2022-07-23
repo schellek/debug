@@ -159,7 +159,7 @@ std::string_view _toString(std::integral auto value) noexcept
   else if (sign)
     *(--begin) = '-';
 
-  return {begin, end};
+  return {begin, static_cast<size_t>(end - begin)};
 }
 
 std::string_view _toString(ieee754 auto value) noexcept
@@ -198,7 +198,7 @@ std::string_view _toHexString(std::integral auto value, bool uppercaseLetters) n
     value >>= 4U;
   } while (value);
 
-  return {begin, end};
+  return {begin, static_cast<size_t>(end - begin)};
 }
 
 std::string_view _toOctString(std::integral auto value) noexcept
@@ -214,21 +214,21 @@ std::string_view _toOctString(std::integral auto value) noexcept
     value >>= 3U;
   } while (value);
 
-  return {begin, end};
+  return {begin, static_cast<size_t>(end - begin)};
 }
 
-#define INSTANCIATE_TEMPLATE(__TYPE__) template std::string_view toString(__TYPE__) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toString(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #define INSTANCIATE_FLOATING_POINT
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(__TYPE__) template std::string_view toOctString(__TYPE__) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toOctString(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(__TYPE__) template std::string_view toHexString(__TYPE__, bool) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toHexString(TYPE, bool) noexcept
 #define INSTANCIATE_INTEGRAL
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE

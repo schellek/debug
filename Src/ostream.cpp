@@ -384,7 +384,7 @@ ostream::size_type ostream::write_formatted(const std::string_view &to_write, co
   return written;
 }
 
-#define INSTANCIATE_TEMPLATE(__TYPE__) template ostream & ostream::operator<<(__TYPE__) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #define INSTANCIATE_FLOATING_POINT
 #include "instanciate_template.hpp"
