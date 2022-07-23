@@ -1,13 +1,15 @@
 #include "fmt/ostream.hpp"
-#include "fmt/memory.hpp"
 #include "defines.h"
 #include <cstdint>
 #include <iostream>
 
-fmt::ostream fmt::cout([](const char *str, uint16_t len) -> void
-{
-  std::cout.write(str, len);
-});
+fmt::ostream fmt::cout{
+  [](const char *str, uint16_t len) noexcept -> uint16_t
+  {
+    std::cout.write(str, len);
+    return len;
+  }
+};
 
 int main()
 {
@@ -16,15 +18,13 @@ int main()
 
   int32_t num1 = 1234567890;
   uint8_t num2 = 255;
-  uint32_t array[] = { 0x12345678U, 0xFFFFFFFFU, 0x55555555, 0x00000000, 0x01020304 };
+  std::array<uint32_t, 5> array = {0x12345678U, 0xFFFFFFFFU, 0x55555555, 0x00000000, 0x01020304};
 
-  fmt::cout << "Hello, this is an example! ";
-  fmt::cout << "I can also print this: "<< num1 << " and this: " << num2 << fmt::endl;
-  PRINTF("%s %c%c %u8 %p\r\n", "printf should also work just fine", ';', ')', 192, NULL);
-
-  fmt::cout << fmt::memory::bin(array);
-  fmt::cout << fmt::memory::hex(array);
+  fmt::cout << "Hello, this is an example!\n";
+  fmt::print(fmt::cout, "I can also print this: ", num1, " and this: ", num2, fmt::endl);
+  fmt::cout << "I can also print this: " << num1 << " and this: " << num2 << fmt::endl;
+  PRINTF("%s %c%c %hhu %p" FMT_ENDL, "printf should also work just fine", ';', ')', 192, NULL);
 
   ASSERT(1 != 1);
-  LOG("This is never printed\r\n");
+  LOG("This is never printed" FMT_ENDL);
 }

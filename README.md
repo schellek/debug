@@ -51,8 +51,8 @@ void HelloWorld(void)
   /* Hello World is only printed, when DEBUG is defined                                           */
   /* Neither "Hello %s\r\n" as well as "World" are also not stored in their corresponding section *
    * when DEBUG is not defined                                                                    */
-  PRINTF("Hello %s\r\n", "World");
-  LOG("Hello again!\r\n");
+  PRINTF("Hello %s" FMT_ENDL, "World");
+  LOG("Hello again!" FMT_ENDL);
 }
 
 void SetArrayValue(unsigned int idx, int value)
