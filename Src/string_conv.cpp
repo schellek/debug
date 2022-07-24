@@ -159,7 +159,7 @@ std::string_view _toString(std::integral auto value) noexcept
   else if (sign)
     *(--begin) = '-';
 
-  return {begin, static_cast<size_t>(end - begin)};
+  return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
 std::string_view _toString(ieee754 auto value) noexcept
@@ -198,7 +198,7 @@ std::string_view _toHexString(std::integral auto value, bool uppercaseLetters) n
     value >>= 4U;
   } while (value);
 
-  return {begin, static_cast<size_t>(end - begin)};
+  return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
 std::string_view _toOctString(std::integral auto value) noexcept
@@ -214,7 +214,7 @@ std::string_view _toOctString(std::integral auto value) noexcept
     value >>= 3U;
   } while (value);
 
-  return {begin, static_cast<size_t>(end - begin)};
+  return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
 #define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toString(TYPE) noexcept
