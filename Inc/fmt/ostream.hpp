@@ -44,26 +44,26 @@ public:
   ostream & operator<<(const char* str) noexcept;
   ostream & operator<<(const std::string_view &str) noexcept;
 
-  template <typename _Ty>
-  ostream & operator<<(_Ty *value) noexcept;
+  template <typename T>
+  ostream & operator<<(T *value) noexcept;
 
   ostream & operator<<(const void *addr) noexcept;
   ostream & operator<<(ostream & (&function)(ostream &stream)) noexcept;
 
-  template <typename _Ty, size_t N>
-  ostream & operator<<(const std::array<_Ty, N> &array) noexcept;
+  template <typename T, size_t N>
+  ostream & operator<<(const std::array<T, N> &array) noexcept;
 
-  template <size_t idx = 0U, typename ..._Ty>
-  ostream & operator<<(const std::tuple<_Ty...> &tuple) noexcept;
+  template <size_t idx = 0U, typename ...T>
+  ostream & operator<<(const std::tuple<T...> &tuple) noexcept;
 
-  template <typename _Ty1, typename _Ty2>
-  ostream & operator<<(const std::pair<_Ty1, _Ty2> &pair) noexcept;
+  template <typename T1, typename T2>
+  ostream & operator<<(const std::pair<T1, T2> &pair) noexcept;
 };
 
 ostream &endl(ostream &stream) noexcept;
 
-template <typename ..._Ty>
-void print(ostream &stream, _Ty && ...value) noexcept;
+template <typename ...T>
+void print(ostream &stream, T && ...value) noexcept;
 
 extern ostream cout;
 

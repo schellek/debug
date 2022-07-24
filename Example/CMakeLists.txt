@@ -6,7 +6,7 @@ set(MAIN_TARGET "${CMAKE_PROJECT_NAME}")
 add_executable(${MAIN_TARGET} main.cpp)
 
 IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
-  add_definitions(-DDEBUG -g)
+  add_definitions(-DDEBUG)
 ENDIF()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/.. fmt)

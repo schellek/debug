@@ -67,36 +67,36 @@ union ieee754_double
   } b;
 };
 
-template <typename _Ty>
-concept ieee754 = std::is_same_v<_Ty, ieee754_single> || std::is_same_v<_Ty, ieee754_double>;
+template <typename T>
+concept ieee754 = std::is_same_v<T, ieee754_single> || std::is_same_v<T, ieee754_double>;
 
-template <typename _Ty>
-using int_fast_t = std::conditional_t<sizeof(_Ty) <= sizeof(int),
-  std::conditional_t<std::is_unsigned_v<_Ty>,
+template <typename T>
+using int_fast_t = std::conditional_t<sizeof(T) <= sizeof(int),
+  std::conditional_t<std::is_unsigned_v<T>,
     unsigned int,
     int>,
-  _Ty>;
+  T>;
 
 constexpr uint16_t g_returnBufferLen = 25U;
 static char g_returnBuffer[g_returnBufferLen];
 
-std::string_view _toString(std::integral auto value) noexcept;
-std::string_view _toString(ieee754 auto value) noexcept;
-std::string_view _toHexString(std::integral auto value, bool uppercase) noexcept;
-std::string_view _toOctString(std::integral auto value) noexcept;
+std::string_view _ToString(std::integral auto value) noexcept;
+std::string_view _ToString(ieee754 auto value) noexcept;
+std::string_view _ToHexString(std::integral auto value, bool uppercase) noexcept;
+std::string_view _ToOctString(std::integral auto value) noexcept;
 
-std::string_view toString(bool value) noexcept
+std::string_view ToString(bool value) noexcept
 {
   return (value) ? "true"sv : "false"sv;
 }
 
-std::string_view toString(std::integral auto value) noexcept
+std::string_view ToString(std::integral auto value) noexcept
 {
   using int_t = decltype(value);
-  return _toString(static_cast<int_fast_t<int_t>>(value));
+  return _ToString(static_cast<int_fast_t<int_t>>(value));
 }
 
-std::string_view toString(std::floating_point auto value) noexcept
+std::string_view ToString(std::floating_point auto value) noexcept
 {
   using ieee754_t = std::conditional_t<std::is_same_v<decltype(value), float>, ieee754_single, ieee754_double>;
 
@@ -110,24 +110,24 @@ std::string_view toString(std::floating_point auto value) noexcept
     retval = (num.b.sign == 0U) ? "nan"sv : "-nan"sv;
 
   else
-    retval = _toString(num);
+    retval = _ToString(num);
 
   return retval;
 }
 
-std::string_view toHexString(std::integral auto value, bool uppercase) noexcept
+std::string_view ToHexString(std::integral auto value, bool uppercase) noexcept
 {
   using int_t = decltype(value);
-  return _toHexString(static_cast<int_fast_t<int_t>>(value), uppercase);
+  return _ToHexString(static_cast<int_fast_t<int_t>>(value), uppercase);
 }
 
-std::string_view toOctString(std::integral auto value) noexcept
+std::string_view ToOctString(std::integral auto value) noexcept
 {
   using int_t = decltype(value);
-  return _toOctString(static_cast<int_fast_t<int_t>>(value));
+  return _ToOctString(static_cast<int_fast_t<int_t>>(value));
 }
 
-std::string_view _toString(std::integral auto value) noexcept
+std::string_view _ToString(std::integral auto value) noexcept
 {
   using int_t = decltype(value);
 
@@ -162,7 +162,7 @@ std::string_view _toString(std::integral auto value) noexcept
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
-std::string_view _toString(ieee754 auto value) noexcept
+std::string_view _ToString(ieee754 auto value) noexcept
 {
   using ieee754_t = decltype(value);
   using uint_t    = typename ieee754_t::uint_t;
@@ -177,7 +177,7 @@ std::string_view _toString(ieee754 auto value) noexcept
   return "<not implemented>"sv;
 }
 
-std::string_view _toHexString(std::integral auto value, bool uppercaseLetters) noexcept
+std::string_view _ToHexString(std::integral auto value, bool uppercaseLetters) noexcept
 {
   using int_t = decltype(value);
 
@@ -201,7 +201,7 @@ std::string_view _toHexString(std::integral auto value, bool uppercaseLetters) n
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
-std::string_view _toOctString(std::integral auto value) noexcept
+std::string_view _ToOctString(std::integral auto value) noexcept
 {
   using int_t = decltype(value);
 
@@ -217,18 +217,18 @@ std::string_view _toOctString(std::integral auto value) noexcept
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toString(TYPE) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view ToString(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #define INSTANCIATE_FLOATING_POINT
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toOctString(TYPE) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view ToOctString(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toHexString(TYPE, bool) noexcept
+#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view ToHexString(TYPE, bool) noexcept
 #define INSTANCIATE_INTEGRAL
 #include "instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE

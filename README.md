@@ -20,7 +20,7 @@ ENDIF()
 #include <ostream>
 
 #ifdef DEBUG
-fmt::ostream fmt::cout([](const char *str, uint16_t len) -> void
+fmt::ostream fmt::cout([](const char *str, uint16_t len) noexcept -> void
 {
   std::cout.write(str, len);
 });

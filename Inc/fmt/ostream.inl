@@ -7,17 +7,17 @@
 namespace fmt
 {
 
-template <typename _Ty>
-ostream & ostream::operator<<(_Ty *value) noexcept
+template <typename T>
+ostream & ostream::operator<<(T *value) noexcept
 {
   *this << reinterpret_cast<const void *>(value);
   return *this;
 }
 
-template <typename _Ty, size_t N>
-ostream & ostream::operator<<(const std::array<_Ty, N> &array) noexcept
+template <typename T, size_t N>
+ostream & ostream::operator<<(const std::array<T, N> &array) noexcept
 {
-  using array_t = std::array<_Ty, N>;
+  using array_t = std::array<T, N>;
 
   *this << '[';
 
@@ -34,10 +34,10 @@ ostream & ostream::operator<<(const std::array<_Ty, N> &array) noexcept
   return *this;
 }
 
-template <size_t idx, typename ..._Ty>
-ostream & ostream::operator<<(const std::tuple<_Ty...> &tuple) noexcept
+template <size_t idx, typename ...T>
+ostream & ostream::operator<<(const std::tuple<T...> &tuple) noexcept
 {
-  if constexpr (idx < sizeof...(_Ty))
+  if constexpr (idx < sizeof...(T))
   {
     if constexpr (idx == 0U)
       *this << '(';
@@ -45,7 +45,7 @@ ostream & ostream::operator<<(const std::tuple<_Ty...> &tuple) noexcept
       *this << ", ";
 
     *this << std::get<idx>(tuple);
-    this->operator<<<idx + 1, _Ty...>(tuple);
+    this->operator<<<idx + 1, T...>(tuple);
   }
   else
   {
@@ -55,8 +55,8 @@ ostream & ostream::operator<<(const std::tuple<_Ty...> &tuple) noexcept
   return *this;
 }
 
-template <typename _Ty1, typename _Ty2>
-ostream & ostream::operator<<(const std::pair<_Ty1, _Ty2> &pair) noexcept
+template <typename T1, typename T2>
+ostream & ostream::operator<<(const std::pair<T1, T2> &pair) noexcept
 {
   print(*this, '(', std::get<0>(pair), ", ", std::get<1>(pair), ')');
   return *this;
@@ -70,8 +70,8 @@ inline ostream & endl(ostream &stream) noexcept
   return stream;
 }
 
-template <typename ..._Ty>
-void print(ostream &stream, _Ty && ...value) noexcept
+template <typename ...T>
+void print(ostream &stream, T && ...value) noexcept
 {
   ((stream << value), ...);
 }

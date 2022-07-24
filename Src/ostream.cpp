@@ -45,18 +45,18 @@ void format_options::reset(void)
   paddingChar = ' ';
 }
 
-template <typename _Ty>
-static inline _Ty getVaArg(va_list argList)
+template <typename T>
+static inline T GetVariadicArg(va_list argList)
 {
-  static_assert(std::is_arithmetic_v<std::remove_pointer_t<_Ty>> || std::is_same_v<_Ty, void *>);
+  static_assert(std::is_arithmetic_v<std::remove_pointer_t<T>> || std::is_same_v<T, void *>);
 
-  using _Tp = std::conditional_t<std::is_integral_v<_Ty> && (sizeof(_Ty) < sizeof(int)),
-                int,
-                std::conditional_t<std::is_same_v<_Ty, float>,
-                  double,
-                  _Ty>>;
+  using pass_t =  std::conditional_t<std::is_integral_v<T> && (sizeof(T) < sizeof(int)),
+                    int,
+                    std::conditional_t<std::is_same_v<T, float>,
+                      double,
+                      T>>;
 
-  return static_cast<_Ty>(va_arg(argList, _Tp));
+  return static_cast<T>(va_arg(argList, pass_t));
 }
 
 ostream::ostream(size_type (*write)(const char *, size_type) noexcept) noexcept
@@ -131,65 +131,65 @@ continue_formatting:
     if (*str == 'u')
     {
       if (argTrait == trait::regular)
-        toBeWritten = toString(getVaArg<unsigned int>(argList));
+        toBeWritten = ToString(GetVariadicArg<unsigned int>(argList));
       else if (argTrait == trait::as_char)
-        toBeWritten = toString(getVaArg<unsigned char>(argList));
+        toBeWritten = ToString(GetVariadicArg<unsigned char>(argList));
       else if (argTrait == trait::as_short)
-        toBeWritten = toString(getVaArg<unsigned short int>(argList));
+        toBeWritten = ToString(GetVariadicArg<unsigned short int>(argList));
       else if (argTrait == trait::as_long)
-        toBeWritten = toString(getVaArg<unsigned long int>(argList));
+        toBeWritten = ToString(GetVariadicArg<unsigned long int>(argList));
       else if (argTrait == trait::as_long_long)
-        toBeWritten = toString(getVaArg<unsigned long long int>(argList));
+        toBeWritten = ToString(GetVariadicArg<unsigned long long int>(argList));
     }
     else if ((*str == 'd') || (*str == 'i'))
     {
       if (argTrait == trait::regular)
-        toBeWritten = toString(getVaArg<int>(argList));
+        toBeWritten = ToString(GetVariadicArg<int>(argList));
       else if (argTrait == trait::as_char)
-        toBeWritten = toString(getVaArg<signed char>(argList));
+        toBeWritten = ToString(GetVariadicArg<signed char>(argList));
       else if (argTrait == trait::as_short)
-        toBeWritten = toString(getVaArg<short int>(argList));
+        toBeWritten = ToString(GetVariadicArg<short int>(argList));
       else if (argTrait == trait::as_long)
-        toBeWritten = toString(getVaArg<long int>(argList));
+        toBeWritten = ToString(GetVariadicArg<long int>(argList));
       else if (argTrait == trait::as_long_long)
-        toBeWritten = toString(getVaArg<long long int>(argList));
+        toBeWritten = ToString(GetVariadicArg<long long int>(argList));
     }
     else if ((*str == 'x') || (*str == 'X'))
     {
       const bool upperCase = (*str == 'X');
 
       if (argTrait == trait::regular)
-        toBeWritten = toHexString(getVaArg<unsigned int>(argList), upperCase);
+        toBeWritten = ToHexString(GetVariadicArg<unsigned int>(argList), upperCase);
       else if (argTrait == trait::as_char)
-        toBeWritten = toHexString(getVaArg<unsigned char>(argList), upperCase);
+        toBeWritten = ToHexString(GetVariadicArg<unsigned char>(argList), upperCase);
       else if (argTrait == trait::as_short)
-        toBeWritten = toHexString(getVaArg<unsigned short int>(argList), upperCase);
+        toBeWritten = ToHexString(GetVariadicArg<unsigned short int>(argList), upperCase);
       else if (argTrait == trait::as_long)
-        toBeWritten = toHexString(getVaArg<unsigned long int>(argList), upperCase);
+        toBeWritten = ToHexString(GetVariadicArg<unsigned long int>(argList), upperCase);
       else if (argTrait == trait::as_long_long)
-        toBeWritten = toHexString(getVaArg<unsigned long long int>(argList), upperCase);
+        toBeWritten = ToHexString(GetVariadicArg<unsigned long long int>(argList), upperCase);
     }
     else if (*str == 'o')
     {
       if (argTrait == trait::regular)
-        toBeWritten = toOctString(getVaArg<unsigned int>(argList));
+        toBeWritten = ToOctString(GetVariadicArg<unsigned int>(argList));
       else if (argTrait == trait::as_char)
-        toBeWritten = toOctString(getVaArg<unsigned char>(argList));
+        toBeWritten = ToOctString(GetVariadicArg<unsigned char>(argList));
       else if (argTrait == trait::as_short)
-        toBeWritten = toOctString(getVaArg<unsigned short int>(argList));
+        toBeWritten = ToOctString(GetVariadicArg<unsigned short int>(argList));
       else if (argTrait == trait::as_long)
-        toBeWritten = toOctString(getVaArg<unsigned long int>(argList));
+        toBeWritten = ToOctString(GetVariadicArg<unsigned long int>(argList));
       else if (argTrait == trait::as_long_long)
-        toBeWritten = toOctString(getVaArg<unsigned long long int>(argList));
+        toBeWritten = ToOctString(GetVariadicArg<unsigned long long int>(argList));
     }
     else if (*str == 'p')
     {
-      void *addr = getVaArg<void *>(argList);
+      void *addr = GetVariadicArg<void *>(argList);
 
       if (addr != nullptr)
       {
         options.outputHexPrefix = true;
-        toBeWritten = toString(reinterpret_cast<uintptr_t>(addr));
+        toBeWritten = ToString(reinterpret_cast<uintptr_t>(addr));
       }
       else
       {
@@ -198,30 +198,30 @@ continue_formatting:
     }
     else if ((*str == 'f') || (*str == 'F'))
     {
-      toBeWritten = toString(getVaArg<float>(argList));
+      toBeWritten = ToString(GetVariadicArg<float>(argList));
     }
     else if (*str == 's')
     {
-      char *s = getVaArg<char *>(argList);
+      char *s = GetVariadicArg<char *>(argList);
       toBeWritten = (s != nullptr) ? std::string_view{s} : "(null)"sv;
     }
     else if (*str == 'c')
     {
-      c = getVaArg<char>(argList);
+      c = GetVariadicArg<char>(argList);
       toBeWritten = std::string_view{&c, 1};
     }
     else if (*str == 'n')
     {
       if (argTrait == trait::regular)
-        *getVaArg<int *>(argList) = written;
+        *GetVariadicArg<int *>(argList) = written;
       else if (argTrait == trait::as_char)
-        *getVaArg<signed char *>(argList) = static_cast<signed char>(written);
+        *GetVariadicArg<signed char *>(argList) = static_cast<signed char>(written);
       else if (argTrait == trait::as_short)
-        *getVaArg<signed short *>(argList) = static_cast<signed short>(written);
+        *GetVariadicArg<signed short *>(argList) = static_cast<signed short>(written);
       else if (argTrait == trait::as_long)
-        *getVaArg<long int *>(argList) = static_cast<long int>(written);
+        *GetVariadicArg<long int *>(argList) = static_cast<long int>(written);
       else if (argTrait == trait::as_long_long)
-        *getVaArg<long long int *>(argList) = static_cast<long long int>(written);
+        *GetVariadicArg<long long int *>(argList) = static_cast<long long int>(written);
     }
     else
     {
@@ -292,13 +292,13 @@ int ostream::printf(const char *str, ...) noexcept
 
 ostream & ostream::operator<<(std::integral auto value) noexcept
 {
-  write(toString(value));
+  write(ToString(value));
   return *this;
 }
 
 ostream & ostream::operator<<(std::floating_point auto value) noexcept
 {
-  write(toString(value));
+  write(ToString(value));
   return *this;
 }
 
@@ -335,7 +335,7 @@ ostream & ostream::operator<<(const std::string_view &str) noexcept
 ostream & ostream::operator<<(const void *addr) noexcept
 {
   write(HEX_PREFIX);
-  write(toHexString(reinterpret_cast<uintptr_t>(addr), false));
+  write(ToHexString(reinterpret_cast<uintptr_t>(addr), false));
   return *this;
 }
 
