@@ -20,19 +20,26 @@ class ostream
 {
 public:
   using size_type = uint16_t;
+  using write_func = size_type(const char *, size_type) noexcept;
+  using manip_func = ostream &(ostream &) noexcept;
+  using flush_func = void(void) noexcept;
 
 private:
-  size_type (&m_write)(const char *, size_type) noexcept;
+  write_func *const m_write;
+  flush_func *const m_flush;
   size_type write_formatted(const std::string_view &to_write, const format_options &options) noexcept;
 
 public:
   ostream() = delete;
-  ostream(size_type (*write)(const char *, size_type) noexcept) noexcept;
+  ostream(write_func *write, flush_func *flush = nullptr) noexcept;
 
   size_type write(char c) noexcept;
   size_type write(char c, size_type n) noexcept;
   size_type write(const char *str, size_type len) noexcept;
   size_type write(const std::string_view &str) noexcept;
+
+  void flush(void) noexcept;
+
   int vprintf(const char *str, va_list argList) noexcept;
   int printf(const char *str, ...) noexcept;
 
@@ -48,7 +55,7 @@ public:
   ostream & operator<<(T *value) noexcept;
 
   ostream & operator<<(const void *addr) noexcept;
-  ostream & operator<<(ostream & (&function)(ostream &stream)) noexcept;
+  ostream & operator<<(manip_func &function) noexcept;
 
   template <typename T, size_t N>
   ostream & operator<<(const std::array<T, N> &array) noexcept;
@@ -60,7 +67,8 @@ public:
   ostream & operator<<(const std::pair<T1, T2> &pair) noexcept;
 };
 
-ostream &endl(ostream &stream) noexcept;
+ostream & flush(ostream &stream) noexcept;
+ostream & endl(ostream &stream) noexcept;
 
 template <typename ...T>
 void print(ostream &stream, T && ...value) noexcept;

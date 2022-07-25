@@ -59,8 +59,8 @@ static inline T GetVariadicArg(va_list argList)
   return static_cast<T>(va_arg(argList, pass_t));
 }
 
-ostream::ostream(size_type (*write)(const char *, size_type) noexcept) noexcept
-  : m_write{*write}
+ostream::ostream(write_func *write, flush_func *flush) noexcept
+  : m_write{write}, m_flush{flush}
 {
   if (write == nullptr)
     exit(EXIT_FAILURE);
@@ -68,7 +68,7 @@ ostream::ostream(size_type (*write)(const char *, size_type) noexcept) noexcept
 
 ostream::size_type ostream::write(char c) noexcept
 {
-  return m_write(&c, 1);
+  return (*m_write)(&c, 1);
 }
 
 ostream::size_type ostream::write(char c, size_type n) noexcept
@@ -80,21 +80,27 @@ ostream::size_type ostream::write(char c, size_type n) noexcept
   std::fill_n(toWrite, (n < WRITE_CHUNK_SIZE) ? n : WRITE_CHUNK_SIZE, c);
 
   for (; n > WRITE_CHUNK_SIZE; n -= WRITE_CHUNK_SIZE)
-    written += m_write(toWrite, WRITE_CHUNK_SIZE);
+    written += (*m_write)(toWrite, WRITE_CHUNK_SIZE);
 
-  written += m_write(toWrite, n);
+  written += (*m_write)(toWrite, n);
 
   return written;
 }
 
 ostream::size_type ostream::write(const char *str, size_type len) noexcept
 {
-  return m_write(str, len);
+  return (*m_write)(str, len);
 }
 
 ostream::size_type ostream::write(const std::string_view &str) noexcept
 {
-  return m_write(str.data(), static_cast<size_type>(str.size()));
+  return (*m_write)(str.data(), static_cast<size_type>(str.size()));
+}
+
+void ostream::flush(void) noexcept
+{
+  if (m_flush != nullptr)
+    (*m_flush)();
 }
 
 int ostream::vprintf(const char *str, va_list argList) noexcept
@@ -339,7 +345,7 @@ ostream & ostream::operator<<(const void *addr) noexcept
   return *this;
 }
 
-ostream & ostream::operator<<(ostream &(&function)(ostream &stream)) noexcept
+ostream & ostream::operator<<(manip_func &function) noexcept
 {
   return function(*this);
 }
@@ -382,6 +388,21 @@ ostream::size_type ostream::write_formatted(const std::string_view &to_write, co
   }
 
   return written;
+}
+
+ostream & flush(ostream &stream) noexcept
+{
+  stream.flush();
+
+  return stream;
+}
+
+ostream & endl(ostream &stream) noexcept
+{
+  stream.write(FMT_ENDL, static_cast<ostream::size_type>(sizeof(FMT_ENDL) - 1U));
+  stream.flush();
+
+  return stream;
 }
 
 #define INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept

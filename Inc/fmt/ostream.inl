@@ -62,14 +62,6 @@ ostream & ostream::operator<<(const std::pair<T1, T2> &pair) noexcept
   return *this;
 }
 
-inline ostream & endl(ostream &stream) noexcept
-{
-  using namespace std::string_view_literals;
-
-  stream.write(FMT_ENDL ""sv);
-  return stream;
-}
-
 template <typename ...T>
 void print(ostream &stream, T && ...value) noexcept
 {
