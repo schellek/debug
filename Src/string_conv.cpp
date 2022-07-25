@@ -181,13 +181,13 @@ std::string_view _ToHexString(std::integral auto value, bool uppercaseLetters) n
 {
   using int_t = decltype(value);
 
-  static constexpr char _hexLookup[2U][16U] =
+  static constexpr char HEX_LOOKUP[2U][16U] =
   {
     { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' },
     { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' }
   };
 
-  const char (&hexLookup)[16U] = uppercaseLetters ? _hexLookup[1U] : _hexLookup[0U];
+  const char (&hexLookup)[16U] = uppercaseLetters ? HEX_LOOKUP[1U] : HEX_LOOKUP[0U];
 
   char *const end = g_returnBuffer + ((sizeof(int_t) * 8U) / 4U);
   char *begin = end;
