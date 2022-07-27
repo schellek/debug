@@ -144,7 +144,7 @@ std::string_view _ToString(std::integral auto value) noexcept
   else if (value < 0)
   {
     sign = true;
-    value = 0-value;
+    value = -value;
   }
 
   do
