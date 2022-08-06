@@ -4,6 +4,8 @@
 
 #include "fmt/ostream.hpp"
 #include "fmt/string_conv.hpp"
+#include "format_options.hpp"
+#include "formatted_writer.hpp"
 
 
 using namespace std::string_view_literals;
@@ -11,42 +13,11 @@ using namespace std::string_view_literals;
 namespace fmt
 {
 
-static constexpr std::string_view HEX_PREFIX = "0x"sv;
-
-namespace align
-{
-enum type : uint8_t { right = 0U, left };
-}
-using align_t = align::type;
-
-namespace trait
-{
-enum type : uint8_t { regular = 0U, as_char, as_short, as_long, as_long_long, as_invalid };
-}
-using trait_t = trait::type;
-
-struct format_options
-{
-  align_t alignment;
-  bool outputHexPrefix;
-  bool outputSign;
-  ostream::size_type fieldWidth;
-  char paddingChar;
-
-  void reset();
-};
-
-void format_options::reset(void)
-{
-  alignment = align::right;
-  outputHexPrefix = false;
-  outputSign = false;
-  fieldWidth = 0U;
-  paddingChar = ' ';
-}
+using ssize_t = std::make_signed_t<size_t>;
+using uptrdiff_t = std::make_unsigned_t<ptrdiff_t>;
 
 template <typename T>
-static inline T GetVariadicArg(va_list argList)
+static inline T GetVariadicArg(va_list &argList)
 {
   static_assert(std::is_arithmetic_v<std::remove_pointer_t<T>> || std::is_same_v<T, void *>);
 
@@ -92,7 +63,7 @@ ostream::size_type ostream::write(const char *str, size_type len) noexcept
   return (*m_write)(str, len);
 }
 
-ostream::size_type ostream::write(const std::string_view &str) noexcept
+ostream::size_type ostream::write(std::string_view str) noexcept
 {
   return (*m_write)(str.data(), static_cast<size_type>(str.size()));
 }
@@ -107,11 +78,14 @@ int ostream::vprintf(const char *str, va_list argList) noexcept
 {
   int written = 0;
 
-  std::string_view toBeWritten;
-  char c;
-  format_options options;
-  trait_t argTrait;
+  FormattedWriter writeFormatted{*this};
 
+  const char *formatBegin;
+  FormatOptions formatOptions;
+  trait argTraitment;
+  std::string_view toBeWritten;
+  uint8_t argFlags;
+  char c;
 
   while (*str != '\0')
   {
@@ -121,81 +95,112 @@ int ostream::vprintf(const char *str, va_list argList) noexcept
       continue;
     }
 
-    ++str;
+    formatBegin = str++;
 
-    toBeWritten = ""sv;
-    options.reset();
-    argTrait = trait::regular;
+    str = parseFormatOptions(str, argList, formatOptions);
+    str = parseArgTraitment(str, argTraitment);
 
-continue_formatting:
-    if (argTrait == trait::as_invalid)
+    if (argTraitment == trait::asInvalid)
       continue;
 
-    if (!std::isalpha(*str) || (*str == 'h') || (*str == 'd'))
-      goto skip_to_formatting_options;
+    toBeWritten = ""sv;
+    argFlags = 0U;
 
     if (*str == 'u')
     {
-      if (argTrait == trait::regular)
-        toBeWritten = ToString(GetVariadicArg<unsigned int>(argList));
-      else if (argTrait == trait::as_char)
-        toBeWritten = ToString(GetVariadicArg<unsigned char>(argList));
-      else if (argTrait == trait::as_short)
-        toBeWritten = ToString(GetVariadicArg<unsigned short int>(argList));
-      else if (argTrait == trait::as_long)
-        toBeWritten = ToString(GetVariadicArg<unsigned long int>(argList));
-      else if (argTrait == trait::as_long_long)
-        toBeWritten = ToString(GetVariadicArg<unsigned long long int>(argList));
+      if (argTraitment == trait::regular)
+        toBeWritten = toString(GetVariadicArg<unsigned int>(argList));
+      else if (argTraitment == trait::asChar)
+        toBeWritten = toString(GetVariadicArg<unsigned char>(argList));
+      else if (argTraitment == trait::asShort)
+        toBeWritten = toString(GetVariadicArg<unsigned short int>(argList));
+      else if (argTraitment == trait::asLong)
+        toBeWritten = toString(GetVariadicArg<unsigned long int>(argList));
+      else if (argTraitment == trait::asLongLong)
+        toBeWritten = toString(GetVariadicArg<unsigned long long int>(argList));
+      else if (argTraitment == trait::asIntmax_t)
+        toBeWritten = toString(GetVariadicArg<uintmax_t>(argList));
+      else if (argTraitment == trait::asSize_t)
+        toBeWritten = toString(GetVariadicArg<size_t>(argList));
+      else if (argTraitment == trait::asPtrdiff_t)
+        toBeWritten = toString(GetVariadicArg<uptrdiff_t>(argList));
+
+      argFlags = ArgFlag::Integral | ArgFlag::Decimal;
     }
     else if ((*str == 'd') || (*str == 'i'))
     {
-      if (argTrait == trait::regular)
-        toBeWritten = ToString(GetVariadicArg<int>(argList));
-      else if (argTrait == trait::as_char)
-        toBeWritten = ToString(GetVariadicArg<signed char>(argList));
-      else if (argTrait == trait::as_short)
-        toBeWritten = ToString(GetVariadicArg<short int>(argList));
-      else if (argTrait == trait::as_long)
-        toBeWritten = ToString(GetVariadicArg<long int>(argList));
-      else if (argTrait == trait::as_long_long)
-        toBeWritten = ToString(GetVariadicArg<long long int>(argList));
+      if (argTraitment == trait::regular)
+        toBeWritten = toString(GetVariadicArg<int>(argList));
+      else if (argTraitment == trait::asChar)
+        toBeWritten = toString(GetVariadicArg<signed char>(argList));
+      else if (argTraitment == trait::asShort)
+        toBeWritten = toString(GetVariadicArg<short int>(argList));
+      else if (argTraitment == trait::asLong)
+        toBeWritten = toString(GetVariadicArg<long int>(argList));
+      else if (argTraitment == trait::asLongLong)
+        toBeWritten = toString(GetVariadicArg<long long int>(argList));
+      else if (argTraitment == trait::asIntmax_t)
+        toBeWritten = toString(GetVariadicArg<intmax_t>(argList));
+      else if (argTraitment == trait::asSize_t)
+        toBeWritten = toString(GetVariadicArg<ssize_t>(argList));
+      else if (argTraitment == trait::asPtrdiff_t)
+        toBeWritten = toString(GetVariadicArg<ptrdiff_t>(argList));
+
+      argFlags = ArgFlag::Signed | ArgFlag::Integral | ArgFlag::Decimal;
     }
     else if ((*str == 'x') || (*str == 'X'))
     {
       const bool upperCase = (*str == 'X');
+      const bool prefix = formatOptions.hashFlag;
 
-      if (argTrait == trait::regular)
-        toBeWritten = ToHexString(GetVariadicArg<unsigned int>(argList), upperCase);
-      else if (argTrait == trait::as_char)
-        toBeWritten = ToHexString(GetVariadicArg<unsigned char>(argList), upperCase);
-      else if (argTrait == trait::as_short)
-        toBeWritten = ToHexString(GetVariadicArg<unsigned short int>(argList), upperCase);
-      else if (argTrait == trait::as_long)
-        toBeWritten = ToHexString(GetVariadicArg<unsigned long int>(argList), upperCase);
-      else if (argTrait == trait::as_long_long)
-        toBeWritten = ToHexString(GetVariadicArg<unsigned long long int>(argList), upperCase);
+      if (argTraitment == trait::regular)
+        toBeWritten = toHexString(GetVariadicArg<unsigned int>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asChar)
+        toBeWritten = toHexString(GetVariadicArg<unsigned char>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asShort)
+        toBeWritten = toHexString(GetVariadicArg<unsigned short int>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asLong)
+        toBeWritten = toHexString(GetVariadicArg<unsigned long int>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asLongLong)
+        toBeWritten = toHexString(GetVariadicArg<unsigned long long int>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asIntmax_t)
+        toBeWritten = toHexString(GetVariadicArg<uintmax_t>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asSize_t)
+        toBeWritten = toHexString(GetVariadicArg<size_t>(argList), upperCase, prefix);
+      else if (argTraitment == trait::asPtrdiff_t)
+        toBeWritten = toHexString(GetVariadicArg<uptrdiff_t>(argList), upperCase, prefix);
+
+      argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
     }
     else if (*str == 'o')
     {
-      if (argTrait == trait::regular)
-        toBeWritten = ToOctString(GetVariadicArg<unsigned int>(argList));
-      else if (argTrait == trait::as_char)
-        toBeWritten = ToOctString(GetVariadicArg<unsigned char>(argList));
-      else if (argTrait == trait::as_short)
-        toBeWritten = ToOctString(GetVariadicArg<unsigned short int>(argList));
-      else if (argTrait == trait::as_long)
-        toBeWritten = ToOctString(GetVariadicArg<unsigned long int>(argList));
-      else if (argTrait == trait::as_long_long)
-        toBeWritten = ToOctString(GetVariadicArg<unsigned long long int>(argList));
+      const bool prefix = formatOptions.hashFlag;
+
+      if (argTraitment == trait::regular)
+        toBeWritten = toOctString(GetVariadicArg<unsigned int>(argList), prefix);
+      else if (argTraitment == trait::asChar)
+        toBeWritten = toOctString(GetVariadicArg<unsigned char>(argList), prefix);
+      else if (argTraitment == trait::asShort)
+        toBeWritten = toOctString(GetVariadicArg<unsigned short int>(argList), prefix);
+      else if (argTraitment == trait::asLong)
+        toBeWritten = toOctString(GetVariadicArg<unsigned long int>(argList), prefix);
+      else if (argTraitment == trait::asLongLong)
+        toBeWritten = toOctString(GetVariadicArg<unsigned long long int>(argList), prefix);
+      else if (argTraitment == trait::asIntmax_t)
+        toBeWritten = toOctString(GetVariadicArg<uintmax_t>(argList), prefix);
+      else if (argTraitment == trait::asSize_t)
+        toBeWritten = toOctString(GetVariadicArg<size_t>(argList), prefix);
+      else if (argTraitment == trait::asPtrdiff_t)
+        toBeWritten = toOctString(GetVariadicArg<uptrdiff_t>(argList), prefix);
+
+      argFlags = ArgFlag::Integral | ArgFlag::Octal;
     }
     else if (*str == 'p')
     {
-      void *addr = GetVariadicArg<void *>(argList);
-
-      if (addr != nullptr)
+      if (void *addr = GetVariadicArg<void *>(argList); addr != nullptr)
       {
-        options.outputHexPrefix = true;
-        toBeWritten = ToString(reinterpret_cast<uintptr_t>(addr));
+        toBeWritten = toHexString(reinterpret_cast<uintptr_t>(addr), false, true);
+        argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
       }
       else
       {
@@ -204,12 +209,15 @@ continue_formatting:
     }
     else if ((*str == 'f') || (*str == 'F'))
     {
-      toBeWritten = ToString(GetVariadicArg<float>(argList));
+      toBeWritten = toString(GetVariadicArg<float>(argList));
+
+      argFlags = ArgFlag::Signed | ArgFlag::FloatingPoint;
     }
     else if (*str == 's')
     {
       char *s = GetVariadicArg<char *>(argList);
       toBeWritten = (s != nullptr) ? std::string_view{s} : "(null)"sv;
+      argFlags = ArgFlag::String;
     }
     else if (*str == 'c')
     {
@@ -218,67 +226,38 @@ continue_formatting:
     }
     else if (*str == 'n')
     {
-      if (argTrait == trait::regular)
+      if (argTraitment == trait::regular)
         *GetVariadicArg<int *>(argList) = written;
-      else if (argTrait == trait::as_char)
+      else if (argTraitment == trait::asChar)
         *GetVariadicArg<signed char *>(argList) = static_cast<signed char>(written);
-      else if (argTrait == trait::as_short)
+      else if (argTraitment == trait::asShort)
         *GetVariadicArg<signed short *>(argList) = static_cast<signed short>(written);
-      else if (argTrait == trait::as_long)
+      else if (argTraitment == trait::asLong)
         *GetVariadicArg<long int *>(argList) = static_cast<long int>(written);
-      else if (argTrait == trait::as_long_long)
+      else if (argTraitment == trait::asLongLong)
         *GetVariadicArg<long long int *>(argList) = static_cast<long long int>(written);
+      else if (argTraitment == trait::asIntmax_t)
+        *GetVariadicArg<intmax_t *>(argList) = static_cast<intmax_t>(written);
+      else if (argTraitment == trait::asSize_t)
+        *GetVariadicArg<size_t *>(argList) = static_cast<ssize_t>(written);
+      else if (argTraitment == trait::asPtrdiff_t)
+        *GetVariadicArg<ptrdiff_t *>(argList) = static_cast<ptrdiff_t>(written);
     }
-    else
+    else if (*str == '%')
     {
       written += write(*str);
     }
+    else
+    {
+      written += write(formatBegin, static_cast<size_type>(str + 1 - formatBegin));
+    }
 
     if (!toBeWritten.empty())
-      written += write_formatted(toBeWritten, options);
+      written += formattingIsRequired(formatOptions) ? writeFormatted(toBeWritten, formatOptions, argFlags) :
+                                                       write(toBeWritten);
 
     ++str;
     continue;
-
-skip_to_formatting_options:
-    if (*str == '%')
-    {
-      written += write('%');
-      continue;
-    }
-    else if (*str == 'h')
-    {
-      if (argTrait == trait::regular)
-        argTrait = trait::as_short;
-      else if (argTrait == trait::as_short)
-        argTrait = trait::as_char;
-      else
-        argTrait = trait::as_invalid;
-    }
-    else if (*str == 'l')
-    {
-      if (argTrait == trait::regular)
-        argTrait = trait::as_long;
-      else if (argTrait == trait::as_long)
-        argTrait = trait::as_long_long;
-      else
-        argTrait = trait::as_invalid;
-    }
-    else if (*str == '.')
-    {
-      options.paddingChar = '0';
-    }
-    else if (*str == '-')
-    {
-      options.alignment = align::left;
-    }
-    else if (std::isdigit(*str))
-    {
-      options.fieldWidth = (options.fieldWidth * 10U) + static_cast<uint8_t>(*str - '0');
-    }
-
-    ++str;
-    goto continue_formatting;
   }
 
   return written;
@@ -296,15 +275,17 @@ int ostream::printf(const char *str, ...) noexcept
   return retval;
 }
 
-ostream & ostream::operator<<(std::integral auto value) noexcept
+template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool>>
+ostream & ostream::operator<<(int_t value) noexcept
 {
-  write(ToString(value));
+  write(toString(value));
   return *this;
 }
 
-ostream & ostream::operator<<(std::floating_point auto value) noexcept
+template <typename float_t, std::enable_if_t<std::is_floating_point_v<float_t>, bool>>
+ostream & ostream::operator<<(float_t value) noexcept
 {
-  write(ToString(value));
+  write(toString(value));
   return *this;
 }
 
@@ -320,19 +301,19 @@ ostream & ostream::operator<<(char value) noexcept
   return *this;
 }
 
-ostream & ostream::operator<<(char* str) noexcept
+ostream & ostream::operator<<(char *str) noexcept
 {
   write(std::string_view{str});
   return *this;
 }
 
-ostream & ostream::operator<<(const char* str) noexcept
+ostream & ostream::operator<<(const char *str) noexcept
 {
   write(std::string_view{str});
   return *this;
 }
 
-ostream & ostream::operator<<(const std::string_view &str) noexcept
+ostream & ostream::operator<<(std::string_view str) noexcept
 {
   write(str);
   return *this;
@@ -340,54 +321,13 @@ ostream & ostream::operator<<(const std::string_view &str) noexcept
 
 ostream & ostream::operator<<(const void *addr) noexcept
 {
-  write(HEX_PREFIX);
-  write(ToHexString(reinterpret_cast<uintptr_t>(addr), false));
+  write(toHexString(reinterpret_cast<uintptr_t>(addr), false, true));
   return *this;
 }
 
 ostream & ostream::operator<<(manip_func &function) noexcept
 {
   return function(*this);
-}
-
-ostream::size_type ostream::write_formatted(const std::string_view &to_write, const format_options &options) noexcept
-{
-  size_type toWriteSize = static_cast<size_type>(to_write.size());
-
-  if (options.outputHexPrefix)
-    toWriteSize += static_cast<size_type>(HEX_PREFIX.size());
-
-  const size_type fieldWidth = (options.fieldWidth > toWriteSize) ? options.fieldWidth : toWriteSize;
-  const size_type amountFillCharacter = fieldWidth - toWriteSize;
-  size_type written = 0U;
-
-  if (options.alignment == align::left)
-  {
-    if (options.outputHexPrefix)
-      written += write(HEX_PREFIX);
-
-    written += write(to_write);
-    written += write(' ', amountFillCharacter);
-  }
-  else
-  {
-    if (options.paddingChar == '0')
-    {
-      if (options.outputHexPrefix)
-        written += write(HEX_PREFIX);
-      written += write(options.paddingChar, amountFillCharacter);
-    }
-    else
-    {
-      written += write(options.paddingChar, amountFillCharacter);
-      if (options.outputHexPrefix)
-        written += write(HEX_PREFIX);
-    }
-
-    written += write(to_write);
-  }
-
-  return written;
 }
 
 ostream & flush(ostream &stream) noexcept

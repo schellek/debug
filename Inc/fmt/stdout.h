@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifndef FMT_ENDL
 #define FMT_ENDL "\n"
@@ -10,23 +11,54 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef uint16_t ostream_size_type;
+typedef uint16_t fmt_size_type;
 
 /**
  * @brief         Writes a string to stdout
  * @param[in]     str: String to be written
  * @param[in]     len: Length of the string
- * @return        ostream_size_type: Number of characters written
+ * @return        fmt_size_type: Number of characters written
  */
-ostream_size_type fmt_write(const char *str, ostream_size_type len);
+fmt_size_type fmt_write(const char *str, fmt_size_type len);
 
 /**
  * @brief         Prints a formatted string to stdout
- * @param[in]     str: String to be written
- * @param[in/out] ...: TODO
+ * @param[in]     str: String that contains the text to be written to stdout. It can optionally contain embedded
+ *                format specifiers that are replaced by the values specified in subsequent additional arguments and
+ *                formatted as requested.
+ * @param[in/out] ...: Depending on the format string, the function may expect a sequence of additional arguments, each
+ *                containing a value to be used to replace a format specifier in the format string (or a pointer to a
+ *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_printf(const char* str, ...);
+int fmt_printf(const char *str, ...);
+
+/**
+ * @brief         Stores a formatted string to a specified buffer
+ * @param[out]    buf: Buffer to store the formatted string
+ * @param[in]     str: String that contains the text to be written to the buffer. It can optionally contain embedded
+ *                format specifiers that are replaced by the values specified in subsequent additional arguments and
+ *                formatted as requested.
+ * @param[in/out] ...: Depending on the format string, the function may expect a sequence of additional arguments, each
+ *                containing a value to be used to replace a format specifier in the format string (or a pointer to a
+ *                storage location, for n).
+ * @return        int: Number of characters written
+ */
+int fmt_sprintf(char *buf, const char *str, ...);
+
+/**
+ * @brief         Stores a formatted string to a specified buffer with a fixed length
+ * @param[out]    buf: Buffer to store the formatted string
+ * @param[in]     n: Maximum number of bytes to be used in the buffer
+ * @param[in]     str: String that contains the text to be written to the buffer. It can optionally contain embedded
+ *                format specifiers that are replaced by the values specified in subsequent additional arguments and
+ *                formatted as requested.
+ * @param[in/out] ...: Depending on the format string, the function may expect a sequence of additional arguments, each
+ *                containing a value to be used to replace a format specifier in the format string (or a pointer to a
+ *                storage location, for n).
+ * @return        int: Number of characters written
+ */
+int fmt_snprintf(char *buf, size_t n, const char *str, ...);
 
 /**
  * @brief         Writes a string to stdout followed by an end of line
@@ -43,10 +75,17 @@ int fmt_puts(const char *str);
 int fmt_putchar(int c);
 
 /**
- * @brief 
- * @param expr 
- * @param file 
- * @param line 
+ * @brief         Flushes stdout
+ * @param[]       None
+ * @return        None
+ */
+void fmt_flush(void);
+
+/**
+ * @brief
+ * @param expr
+ * @param file
+ * @param line
  */
 void fmt_assert_failed(const char *expr, const char *file, uint32_t line);
 

@@ -1,29 +1,42 @@
-#include "fmt/ostream.hpp"
-#include "defines.h"
 #include <cstdint>
-#include <iostream>
+#include <cstdio>
+#include <cinttypes>
 
-fmt::ostream fmt::cout{
-  [](const char *str, uint16_t len) noexcept -> uint16_t
+#include "fmt/ostream.hpp"
+#include "fmt/container.hpp"
+#include "defines.h"
+
+
+fmt::ostream fmt::cout
+{
+  [](const char *str, fmt_size_type len) noexcept -> fmt_size_type
   {
-    std::cout.write(str, len);
-    return len;
+    return static_cast<fmt_size_type>(fwrite(str, 1, len, stdout));
+  },
+  [](void) noexcept -> void
+  {
+    fflush(stdout);
   }
 };
 
 int main()
 {
-  uint32_t bitpattern = 0b11000001100100110011001100110011;
-  float fnum = *reinterpret_cast<float *>(&bitpattern);
-
   int32_t num1 = 1234567890;
-  uint8_t num2 = 255;
-  std::array<uint32_t, 5> array = {0x12345678U, 0xFFFFFFFFU, 0x55555555, 0x00000000, 0x01020304};
+  uint8_t num2 = 192;
+  std::array<int, 5> array = {100, 200, 300, 400, 500};
+  std::map<int, std::string> map;
 
-  fmt::cout << "Hello, this is an example!\n";
-  fmt::print(fmt::cout, "I can also print this: ", num1, " and this: ", num2, fmt::endl);
-  fmt::cout << "I can also print this: " << num1 << " and this: " << num2 << fmt::endl;
-  PRINTF("%s %c%c %hhu %p" FMT_ENDL, "printf should also work just fine", ';', ')', 192, NULL);
+  map[10] = "Ten";
+  map[15] = "Fifteen";
+  map[5] = "Five";
+
+  fmt::cout << "Hello, this is an example!" FMT_ENDL;
+
+  fmt_printf("%-7s", "array:");    fmt::cout << array << fmt::endl;
+  fmt_printf("%-*s", 7, "map:");   fmt::cout << map << fmt::endl;
+  fmt_printf("%*s", -7, "tuple:"); fmt::cout << std::make_tuple(num1, 'r', "str") << fmt::endl;
+
+  PRINTF("printf should also work just %s :%c %" PRIu8 " %p" FMT_ENDL, "fine", ')', num2, nullptr);
 
   ASSERT(1 != 1);
   LOG("This is never printed" FMT_ENDL);

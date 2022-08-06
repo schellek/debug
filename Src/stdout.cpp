@@ -1,12 +1,16 @@
 #include <cstdlib>
 
+#include <algorithm>
+
 #include "fmt/stdout.h"
 #include "fmt/ostream.hpp"
 
 
-static_assert(std::is_same_v<ostream_size_type, fmt::ostream::size_type>);
+static char *stringBufferPos, *stringBufferEnd;
 
-ostream_size_type fmt_write(const char *str, uint16_t len)
+static fmt_size_type StringBufferWrite(const char *str, fmt_size_type size) noexcept;
+
+fmt_size_type fmt_write(const char *str, uint16_t len)
 {
   return fmt::cout.write(str, len);
 }
@@ -23,11 +27,49 @@ int fmt_printf(const char *str, ...)
   return retval;
 }
 
+int fmt_sprintf(char *buf, const char *str, ...)
+{
+  stringBufferPos = buf;
+  stringBufferEnd = nullptr;
+
+  fmt::ostream sstream{&StringBufferWrite};
+
+  va_list argList;
+  int retval;
+
+  va_start(argList, str);
+  retval = sstream.vprintf(str, argList);
+  va_end(argList);
+
+  *stringBufferPos = '\0';
+
+  return retval;
+}
+
+int fmt_snprintf(char *buf, size_t n, const char *str, ...)
+{
+  stringBufferPos = buf;
+  stringBufferEnd = buf + n - 1U;
+
+  fmt::ostream sstream{&StringBufferWrite};
+
+  va_list argList;
+  int retval;
+
+  va_start(argList, str);
+  retval = sstream.vprintf(str, argList);
+  va_end(argList);
+
+  *stringBufferPos = '\0';
+
+  return retval;
+}
+
 int fmt_puts(const char *str)
 {
   using namespace std::string_view_literals;
 
-  ostream_size_type len = fmt::cout.write(std::string_view{str});
+  fmt_size_type len = fmt::cout.write(std::string_view{str});
   len += fmt::cout.write(FMT_ENDL ""sv);
 
   return static_cast<int>(len);
@@ -39,12 +81,28 @@ int fmt_putchar(int c)
   return static_cast<int>(c);
 }
 
+void fmt_flush(void)
+{
+  fmt::flush(fmt::cout);
+}
+
 void fmt_assert_failed(const char *expr, const char *file, uint32_t line)
 {
   if (nullptr != expr)
-    fmt::print(fmt::cout, "Assertion failed: ", expr, ", file ", file, ", line ", line, fmt::endl);
+    fmt::cout << "Assertion failed: " << expr << ", file " << file << ", line " << line << fmt::endl;
   else
-    fmt::print(fmt::cout, "Assertion failed: file ", file, ", line ", line, fmt::endl);
+    fmt::cout << "Assertion failed: file " << file << ", line " << line << fmt::endl;
 
   exit(EXIT_FAILURE);
+}
+
+static fmt_size_type StringBufferWrite(const char *str, fmt_size_type size) noexcept
+{
+  if (stringBufferEnd == nullptr)
+    /* Do nothing */;
+  else if ((stringBufferPos + size) > stringBufferEnd)
+    size = stringBufferEnd - stringBufferPos;
+
+  stringBufferPos = std::copy_n(str, size, stringBufferPos);
+  return size;
 }
