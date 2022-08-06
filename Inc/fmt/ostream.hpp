@@ -36,7 +36,7 @@ public:
 
   void flush(void) noexcept;
 
-  int vprintf(const char *str, va_list argList) noexcept;
+  int vprintf(const char *str, va_list args) noexcept;
   int printf(const char *str, ...) noexcept;
 
   template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool> = true>

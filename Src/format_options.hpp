@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "fmt/ostream.hpp"
+#include "va_list.hpp"
 
 namespace fmt
 {
@@ -35,7 +36,7 @@ struct FormatOptions
   int precision;
 };
 
-const char * parseFormatOptions(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept;
+const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
 const char * parseArgTraitment(const char *str, trait &argTraitment) noexcept;
 bool formattingIsRequired(const FormatOptions &formatOptions) noexcept;
 

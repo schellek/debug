@@ -17,12 +17,12 @@ fmt_size_type fmt_write(const char *str, uint16_t len)
 
 int fmt_printf(const char *str, ...)
 {
-  va_list argList;
+  va_list args;
   int retval;
 
-  va_start(argList, str);
-  retval = fmt::cout.vprintf(str, argList);
-  va_end(argList);
+  va_start(args, str);
+  retval = fmt::cout.vprintf(str, args);
+  va_end(args);
 
   return retval;
 }
@@ -34,12 +34,12 @@ int fmt_sprintf(char *buf, const char *str, ...)
 
   fmt::ostream sstream{&StringBufferWrite};
 
-  va_list argList;
+  va_list args;
   int retval;
 
-  va_start(argList, str);
-  retval = sstream.vprintf(str, argList);
-  va_end(argList);
+  va_start(args, str);
+  retval = sstream.vprintf(str, args);
+  va_end(args);
 
   *stringBufferPos = '\0';
 
@@ -53,12 +53,12 @@ int fmt_snprintf(char *buf, size_t n, const char *str, ...)
 
   fmt::ostream sstream{&StringBufferWrite};
 
-  va_list argList;
+  va_list args;
   int retval;
 
-  va_start(argList, str);
-  retval = sstream.vprintf(str, argList);
-  va_end(argList);
+  va_start(args, str);
+  retval = sstream.vprintf(str, args);
+  va_end(args);
 
   *stringBufferPos = '\0';
 

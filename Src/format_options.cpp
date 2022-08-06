@@ -20,17 +20,17 @@ static constexpr FormatOptions DEFAULT_FORMATTING
 };
 
 static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept;
-static const char * parseWidth(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept;
-static const char * parsePrecision(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept;
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
 static const char * parseFlag(const char *str, FormatOptions &formatOptions) noexcept;
 
-const char * parseFormatOptions(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept
+const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
 {
   std::memcpy(&formatOptions, &DEFAULT_FORMATTING, sizeof(FormatOptions));
 
   str = parseFlags(str, formatOptions);
-  str = parseWidth(str, argList, formatOptions);
-  str = parsePrecision(str, argList, formatOptions);
+  str = parseWidth(str, args, formatOptions);
+  str = parsePrecision(str, args, formatOptions);
 
   return str;
 }
@@ -91,13 +91,13 @@ static const char * parseFlags(const char *str, FormatOptions &formatOptions) no
   return postParse;
 }
 
-static const char * parseWidth(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
 {
   const char *preParse = str;
   int fieldWidth = 0;
 
   if (*str == '*')
-    fieldWidth = (++str, va_arg(argList, int));
+    fieldWidth = (++str, args.getArg<int>());
   else while (std::isdigit(*str))
     fieldWidth = fieldWidth * 10 + *(str++) - '0';
 
@@ -114,7 +114,7 @@ static const char * parseWidth(const char *str, va_list &argList, FormatOptions 
   return str;
 }
 
-static const char * parsePrecision(const char *str, va_list &argList, FormatOptions &formatOptions) noexcept
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
 {
   const char *preParse = str;
   int precision = 0;
@@ -126,7 +126,7 @@ static const char * parsePrecision(const char *str, va_list &argList, FormatOpti
   else if (++str; *str == '*')
   {
     ++str;
-    precision = va_arg(argList, int);;
+    precision = args.getArg<int>();
   }
   else
   {
