@@ -9,9 +9,9 @@
 
 fmt::ostream fmt::cout
 {
-  [](const char *str, fmt_size_type len) noexcept -> fmt_size_type
+  [](const char *str, fmt::ostream::size_type len) noexcept -> fmt::ostream::size_type
   {
-    return static_cast<fmt_size_type>(fwrite(str, 1, len, stdout));
+    return static_cast<fmt::ostream::size_type>(fwrite(str, 1U, len, stdout));
   },
   [](void) noexcept -> void
   {

@@ -1,6 +1,6 @@
 # fmt
 
-This repository contains a lightweigt implementation of `stdio` and `ostream` without the use of heap-allocations.
+This repository contains a custom implementation of `stdio` and `ostream` without the use of heap-allocations.
 These debug files are mainly implemented for microcontrollers, however they are platform independent.
 
 [![CMake Build](https://github.com/schellek/fmt/actions/workflows/cmake.yml/badge.svg)](https://github.com/schellek/fmt/actions/workflows/cmake.yml)
@@ -8,23 +8,31 @@ These debug files are mainly implemented for microcontrollers, however they are 
 For example it can be used as follows:
 #### CMakeFiles.txt
 ```cmake
-IF (${CMAKE_BUILD_TYPE} MATCHES Debug)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_definitions(-DDEBUG)
   add_subdirectory(path/to/fmt)
-ENDIF()
+endif()
 ```
 
-#### debug.cpp
+#### cout.cpp
 ```c++
 #include <cstdint>
-#include <ostream>
+#include <cstdio>
 
-#ifdef DEBUG
-fmt::ostream fmt::cout([](const char *str, uint16_t len) noexcept -> void
+#include "fmt/ostream.hpp"
+
+
+fmt::ostream fmt::cout
 {
-  std::cout.write(str, len);
-});
-#endif
+  [](const char *str, fmt::ostream::size_type len) noexcept -> fmt::ostream::size_type
+  {
+    return static_cast<fmt::ostream::size_type>(fwrite(str, 1U, len, stdout));
+  },
+  [](void) noexcept -> void
+  {
+    fflush(stdout);
+  }
+};
 ```
 
 #### someFile.c
@@ -48,16 +56,16 @@ static int array[ARRAY_LEN];
 
 void HelloWorld(void)
 {
-  /* Hello World is only printed, when DEBUG is defined                                           */
-  /* Neither "Hello %s\r\n" as well as "World" are also not stored in their corresponding section *
-   * when DEBUG is not defined                                                                    */
+  /// Hello World is only printed, when DEBUG is defined
+  /// Neither "Hello %s\r\n" as well as "World" are also not stored in their corresponding section
+  /// when DEBUG is not defined
   PRINTF("Hello %s" FMT_ENDL, "World");
   LOG("Hello again!" FMT_ENDL);
 }
 
 void SetArrayValue(unsigned int idx, int value)
 {
-  /* The assert statement below is only checked when DEBUG is defined */
+  /// The assert statement below is only checked when DEBUG is defined
   ASSERT(idx < ARRAY_LEN);
   array[idx] = value;
 }
