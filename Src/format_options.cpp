@@ -7,16 +7,10 @@
 namespace fmt
 {
 
-static constexpr FormatOptions DEFAULT_FORMATTING
+static constexpr FormatOptions DEFAULT_FORMATTING =
 {
-  .minusFlag = false,
-  .plusFlag = false,
-  .spaceFlag = false,
-  .hashFlag = false,
-  .zeroFlag = false,
-
-  .fieldWidth = FormatOptions::NOT_SPECIFIED,
-  .precision = FormatOptions::NOT_SPECIFIED
+  false, false, false, false, false,
+  FormatOptions::NOT_SPECIFIED, FormatOptions::NOT_SPECIFIED
 };
 
 static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept;
