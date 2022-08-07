@@ -58,7 +58,8 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
   else
     subFieldWidth = toBeWrittenSize;
 
-  if (const bool isZero = isIntegral && (toBeWrittenSize == 1U) && (toBeWritten.at(0) == '0'); isZero)
+  if (const bool isZero = isIntegral && (toBeWrittenSize == 1U) && (toBeWritten.at(0) == '0');
+      isZero && (options.precision == 0))
   {
     /* Do nothing */;
   }

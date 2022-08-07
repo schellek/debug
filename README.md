@@ -16,7 +16,6 @@ endif()
 
 #### cout.cpp
 ```c++
-#include <cstdint>
 #include <cstdio>
 
 #include "fmt/ostream.hpp"

@@ -109,7 +109,7 @@ std::string_view toString(float_t value) noexcept
   using ieee754_t = std::conditional_t<std::is_same_v<float_t, float>, ieee754_single, ieee754_double>;
 
   std::string_view retval;
-  ieee754_t num{ .f = value };
+  ieee754_t num{value};
 
   if ((num.w & ieee754_t::C_INFINITY) == ieee754_t::C_INFINITY)
     retval = (num.b.sign == 0U) ? "inf"sv : "-inf"sv;
