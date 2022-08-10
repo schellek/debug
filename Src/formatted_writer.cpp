@@ -42,7 +42,7 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
     fieldWidth -= 2;
   }
 
-  size_type toBeWrittenSize = toBeWritten.size();
+  size_type toBeWrittenSize = static_cast<size_type>(toBeWritten.size());
 
   if (isString && (options.precision != FormatOptions::NOT_SPECIFIED) && (options.precision < toBeWrittenSize))
   {

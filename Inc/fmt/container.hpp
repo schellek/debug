@@ -151,6 +151,6 @@ OStream & operator<<(OStream &stream, const std::pair<T1, T2> &pair) noexcept
 
 fmt::ostream & operator<<(fmt::ostream &stream, const std::string &str) noexcept
 {
-  stream.write(str.data(), str.size());
+  stream.write(str.data(), static_cast<fmt::ostream::size_type>(str.size()));
   return stream;
 }

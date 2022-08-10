@@ -101,7 +101,7 @@ static fmt_size_type StringBufferWrite(const char *str, fmt_size_type size) noex
   if (stringBufferEnd == nullptr)
     /* Do nothing */;
   else if ((stringBufferPos + size) > stringBufferEnd)
-    size = stringBufferEnd - stringBufferPos;
+    size = static_cast<fmt_size_type>(stringBufferEnd - stringBufferPos);
 
   stringBufferPos = std::copy_n(str, size, stringBufferPos);
   return size;
