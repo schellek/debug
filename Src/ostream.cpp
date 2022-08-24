@@ -47,12 +47,12 @@ ostream::size_type ostream::write(char c, size_type n) noexcept
 
 ostream::size_type ostream::write(const char *str, size_type len) noexcept
 {
-  return (*m_write)(str, len);
+  return ((str != nullptr) && (len > 0U)) ? (*m_write)(str, len) : size_type{0};
 }
 
 ostream::size_type ostream::write(std::string_view str) noexcept
 {
-  return (*m_write)(str.data(), static_cast<size_type>(str.size()));
+  return (!str.empty()) ? (*m_write)(str.data(), static_cast<size_type>(str.size())) : size_type{0};
 }
 
 void ostream::flush(void) noexcept
@@ -292,13 +292,15 @@ ostream & ostream::operator<<(char value) noexcept
 
 ostream & ostream::operator<<(char *str) noexcept
 {
-  write(std::string_view{str});
+  if (str != nullptr)
+    write(std::string_view{str});
   return *this;
 }
 
 ostream & ostream::operator<<(const char *str) noexcept
 {
-  write(std::string_view{str});
+  if (str != nullptr)
+    write(std::string_view{str});
   return *this;
 }
 
