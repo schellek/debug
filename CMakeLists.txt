@@ -29,6 +29,14 @@ endif()
 
 if(DEFINED MAIN_TARGET)
   target_link_libraries(${MAIN_TARGET} ${FMT_LIB})
-  target_include_directories(${MAIN_TARGET} PUBLIC $<TARGET_PROPERTY:${FMT_LIB},INCLUDE_DIRECTORIES>)
-  target_compile_definitions(${MAIN_TARGET} PUBLIC $<TARGET_PROPERTY:${FMT_LIB},COMPILE_DEFINITIONS>)
+
+  get_target_property(PROPERTY ${FMT_LIB} INCLUDE_DIRECTORIES)
+  if(NOT PROPERTY STREQUAL "PROPERTY-NOTFOUND")
+    target_include_directories(${MAIN_TARGET} PUBLIC ${PROPERTY})
+  endif()
+
+  get_target_property(PROPERTY ${FMT_LIB} COMPILE_DEFINITIONS)
+  if(NOT PROPERTY STREQUAL "PROPERTY-NOTFOUND")
+    target_compile_definitions(${MAIN_TARGET} PUBLIC ${PROPERTY})
+  endif()
 endif()
