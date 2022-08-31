@@ -1,5 +1,5 @@
 project(FMT C CXX)
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.17)
 
 set(FMT_LIB fmt)
 
@@ -18,25 +18,12 @@ target_sources(${FMT_LIB}
   ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv.cpp
 )
 
-target_include_directories(${FMT_LIB}
-  PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}/Inc
-)
-
-if(DEFINED FMT_ENDL)
-  target_compile_definitions(${FMT_LIB} PRIVATE "FMT_ENDL=\"${FMT_ENDL}\"")
-endif()
+include(fmt.cmake)
+fmt_include_directories(${FMT_LIB})
+fmt_compile_definitions(${FMT_LIB})
 
 if(DEFINED MAIN_TARGET)
-  target_link_libraries(${MAIN_TARGET} ${FMT_LIB})
-
-  get_target_property(PROPERTY ${FMT_LIB} INCLUDE_DIRECTORIES)
-  if(NOT PROPERTY STREQUAL "PROPERTY-NOTFOUND")
-    target_include_directories(${MAIN_TARGET} PUBLIC ${PROPERTY})
-  endif()
-
-  get_target_property(PROPERTY ${FMT_LIB} COMPILE_DEFINITIONS)
-  if(NOT PROPERTY STREQUAL "PROPERTY-NOTFOUND")
-    target_compile_definitions(${MAIN_TARGET} PUBLIC ${PROPERTY})
-  endif()
+  fmt_include_directories(${MAIN_TARGET})
+  fmt_compile_definitions(${MAIN_TARGET})
+  target_link_libraries(${MAIN_TARGET} fmt)
 endif()

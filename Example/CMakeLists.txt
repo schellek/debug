@@ -10,3 +10,6 @@ if (${CMAKE_BUILD_TYPE} MATCHES Debug)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/.. fmt)
+fmt_include_directories(${MAIN_TARGET})
+fmt_compile_definitions(${MAIN_TARGET})
+target_link_libraries(${MAIN_TARGET} fmt)
