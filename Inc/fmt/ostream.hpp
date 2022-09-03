@@ -37,7 +37,7 @@ public:
   void flush(void) noexcept;
 
   int vprintf(const char *str, va_list args) noexcept;
-  int printf(const char *str, ...) noexcept;
+  int printf(FMT_PRINTF_FMTSTR const char *str, ...) noexcept FMT_PRINTF_FUNC(2);
 
   template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool> = true>
   ostream & operator<<(int_t value) noexcept;

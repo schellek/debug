@@ -7,6 +7,20 @@
 #define FMT_ENDL "\n"
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1600)
+#define FMT_PRINTF_FMTSTR         _Printf_format_string_
+#define FMT_PRINTF_FUNC(FMT_ARG)
+
+#elif defined(__GNUC__)
+#define FMT_PRINTF_FMTSTR
+#define FMT_PRINTF_FUNC(FMT_ARG)  __attribute__((format(__printf__, FMT_ARG, FMT_ARG + 1)))
+
+#else
+#define FMT_PRINTF_FMTSTR
+#define FMT_PRINTF_FUNC(FMT_ARG)
+
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -31,7 +45,7 @@ fmt_size_type fmt_write(const char *str, fmt_size_type len);
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_printf(const char *str, ...);
+int fmt_printf(FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(1);
 
 /**
  * @brief         Stores a formatted string to a specified buffer
@@ -44,7 +58,7 @@ int fmt_printf(const char *str, ...);
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_sprintf(char *buf, const char *str, ...);
+int fmt_sprintf(char *buf, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(2);
 
 /**
  * @brief         Stores a formatted string to a specified buffer with a fixed length
@@ -58,7 +72,7 @@ int fmt_sprintf(char *buf, const char *str, ...);
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_snprintf(char *buf, size_t n, const char *str, ...);
+int fmt_snprintf(char *buf, size_t n, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(3);
 
 /**
  * @brief         Writes a string to stdout followed by an end of line
