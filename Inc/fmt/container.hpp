@@ -10,7 +10,6 @@
 #include <map>
 #include <unordered_map>
 #include <tuple>
-#include <string>
 #include "fmt/ostream.hpp"
 
 
@@ -146,11 +145,5 @@ template <typename OStream, typename T1, typename T2>
 OStream & operator<<(OStream &stream, const std::pair<T1, T2> &pair) noexcept
 {
   stream << '(' << pair.first << ", " << pair.second << ')';
-  return stream;
-}
-
-fmt::ostream & operator<<(fmt::ostream &stream, const std::string &str) noexcept
-{
-  stream.write(str.data(), static_cast<fmt::ostream::size_type>(str.size()));
   return stream;
 }

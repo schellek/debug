@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cinttypes>
+#include <string_view>
 
 #include "fmt/ostream.hpp"
 #include "fmt/container.hpp"
@@ -24,11 +25,11 @@ int main()
   int32_t num1 = 1234567890;
   uint8_t num2 = 192;
   std::array<int, 5> array = {100, 200, 300, 400, 500};
-  std::map<int, std::string> map;
+  std::map<int, std::string_view> map;
 
-  map[10] = "Ten";
-  map[15] = "Fifteen";
-  map[5] = "Five";
+  map.emplace(10, "Ten");
+  map.emplace(15, "Fifteen");
+  map.emplace(5, "Five");
 
   fmt::cout << "Hello, this is an example!" FMT_ENDL;
 
