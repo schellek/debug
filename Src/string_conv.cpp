@@ -15,16 +15,13 @@ union ieee754_single
 {
   using float_t = float;
   using uint_t  = uint32_t;
+  using int_t   = int32_t;
 
-  enum : uint_t
+  enum
   {
-    C_FRACTION_WIDTH = 23U,
-    C_EXPONENT_WIDTH = 8U,
-    C_SIGN_WIDTH     = 1U,
-
-    C_BIAS           = 127U,
-    C_INFINITY       = 0x7F800000U,
-    C_NAN            = 0x7FC00000U
+    MANTISSA_WIDTH        = 23U,
+    BIASED_EXPONENT_WIDTH = 8U,
+    SIGN_WIDTH            = 1U
   };
 
   static_assert(std::numeric_limits<float_t>::is_iec559);
@@ -33,9 +30,9 @@ union ieee754_single
   uint_t w;
   struct
   {
-    uint_t fraction : C_FRACTION_WIDTH;
-    uint_t exponent : C_EXPONENT_WIDTH;
-    uint_t sign     : C_SIGN_WIDTH;
+    uint_t mantissa       : MANTISSA_WIDTH;
+    uint_t biasedExponent : BIASED_EXPONENT_WIDTH;
+    uint_t sign           : SIGN_WIDTH;
   } b;
 };
 
@@ -43,16 +40,13 @@ union ieee754_double
 {
   using float_t = double;
   using uint_t  = uint64_t;
+  using int_t   = int64_t;
 
-  enum : uint_t
+  enum
   {
-    C_FRACTION_WIDTH = 52U,
-    C_EXPONENT_WIDTH = 11U,
-    C_SIGN_WIDTH     = 1U,
-
-    C_BIAS           = 1023U,
-    C_INFINITY       = 0x7FF0000000000000U,
-    C_NAN            = 0x7FF8000000000000U
+    MANTISSA_WIDTH        = 52U,
+    BIASED_EXPONENT_WIDTH = 11U,
+    SIGN_WIDTH            = 1U
   };
 
   static_assert(std::numeric_limits<float_t>::is_iec559);
@@ -61,9 +55,9 @@ union ieee754_double
   uint_t w;
   struct
   {
-    uint_t fraction : C_FRACTION_WIDTH;
-    uint_t exponent : C_EXPONENT_WIDTH;
-    uint_t sign     : C_SIGN_WIDTH;
+    uint_t mantissa       : MANTISSA_WIDTH;
+    uint_t biasedExponent : BIASED_EXPONENT_WIDTH;
+    uint_t sign           : SIGN_WIDTH;
   } b;
 };
 
@@ -77,9 +71,6 @@ using int_fast_t = std::conditional_t<sizeof(T) <= sizeof(int),
     int>,
   T>;
 
-constexpr uint16_t g_returnBufferLen = 25U;
-static char g_returnBuffer[g_returnBufferLen];
-
 template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool> = true>
 std::string_view _toString(int_t value) noexcept;
 
@@ -91,6 +82,23 @@ std::string_view _toHexString(int_t value, bool uppercase, bool prefix) noexcept
 
 template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool> = true>
 std::string_view _toOctString(int_t value, bool prefix) noexcept;
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool> = true>
+static constexpr typename ieee754_t::uint_t biasedExponentMax(void) noexcept;
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool> = true>
+static constexpr typename ieee754_t::uint_t bias(void) noexcept;
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool> = true>
+static constexpr typename ieee754_t::int_t exponent(ieee754_t value) noexcept;
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool> = true>
+static constexpr bool isNan(ieee754_t value) noexcept;
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool> = true>
+static constexpr bool isInf(ieee754_t value) noexcept;
+
+static char g_returnBuffer[25U];
 
 std::string_view toString(bool value) noexcept
 {
@@ -111,10 +119,13 @@ std::string_view toString(float_t value) noexcept
   std::string_view retval;
   ieee754_t num{value};
 
-  if ((num.w & ieee754_t::C_INFINITY) == ieee754_t::C_INFINITY)
+  if (num.w == 0U)
+    retval = "0"sv;
+
+  else if (isInf(num))
     retval = (num.b.sign == 0U) ? "inf"sv : "-inf"sv;
 
-  else if ((num.w & ieee754_t::C_NAN) == ieee754_t::C_NAN)
+  else if (isNan(num))
     retval = (num.b.sign == 0U) ? "nan"sv : "-nan"sv;
 
   else
@@ -169,17 +180,30 @@ std::string_view _toString(int_t value) noexcept
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
+
 template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
 std::string_view _toString(ieee754_t value) noexcept
+// using ieee754_t = ieee754_single;
+// std::string_view _toString(ieee754_t value)
 {
-  using uint_t    = typename ieee754_t::uint_t;
-  using int_t     = std::make_signed_t<uint_t>;
+  using float_t = typename ieee754_t::float_t;
+  using uint_t  = typename ieee754_t::uint_t;
+  using int_t   = typename ieee754_t::int_t;
 
-  int_t exponent = value.b.exponent - ieee754_t::C_BIAS;
-  uint_t mantissa = (value.b.fraction >> (ieee754_t::C_FRACTION_WIDTH - exponent)) | uint_t{1} << exponent;
+  const int_t e = exponent(value);
+  // const uint_t f = (value.b.mantissa >> (ieee754_t::MANTISSA_WIDTH - e)) | uint_t{1} << e;
 
-  (void)exponent;
-  (void)mantissa;
+  // float_t vMinus, vPlus;
+  // uint_t mMinus, mPlus;
+
+  // if (e < 0)
+  // {
+  //   mMinus = 1U << e;
+  // }
+  // else
+  // {
+  //   mMinus = 1U;
+  // }
 
   return "<not implemented>"sv;
 }
@@ -229,6 +253,36 @@ std::string_view _toOctString(int_t value, bool prefix) noexcept
     *(--begin) = '0';
 
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
+}
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
+static constexpr typename ieee754_t::uint_t biasedExponentMax(void) noexcept
+{
+  return static_cast<typename ieee754_t::uint_t>((1U << ieee754_t::BIASED_EXPONENT_WIDTH) - 1U);
+}
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
+static constexpr typename ieee754_t::uint_t bias(void) noexcept
+{
+  return static_cast<typename ieee754_t::uint_t>((1U << (ieee754_t::BIASED_EXPONENT_WIDTH - 1U)) - 1U);
+}
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
+static constexpr typename ieee754_t::int_t exponent(ieee754_t value) noexcept
+{
+  return static_cast<typename ieee754_t::int_t>(value.b.biasedExponent - bias<ieee754_t>());
+}
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
+static constexpr bool isNan(ieee754_t value) noexcept
+{
+  return (value.b.biasedExponent == biasedExponentMax<ieee754_t>()) && (value.b.mantissa != 0);
+}
+
+template <typename ieee754_t, std::enable_if_t<is_ieee754_v<ieee754_t>, bool>>
+static constexpr bool isInf(ieee754_t value) noexcept
+{
+  return (value.b.biasedExponent == biasedExponentMax<ieee754_t>()) && (value.b.mantissa == 0);
 }
 
 #define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toString(TYPE) noexcept
