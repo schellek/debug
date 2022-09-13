@@ -18,6 +18,10 @@ target_sources(${FMT_LIB}
   ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv.cpp
 )
 
+target_include_directories(${FMT_LIB}
+  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Inc/private
+)
+
 include(fmt.cmake)
 fmt_include_directories(${FMT_LIB})
 fmt_compile_definitions(${FMT_LIB})

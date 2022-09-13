@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fmt/ostream.hpp"
-#include "format_options.hpp"
+#include "fmt/format_options.hpp"
 
 namespace fmt
 {

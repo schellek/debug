@@ -288,17 +288,17 @@ static constexpr bool isInf(ieee754_t value) noexcept
 #define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toString(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #define INSTANCIATE_FLOATING_POINT
-#include "instanciate_template.hpp"
+#include "fmt/instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
 #define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toHexString(TYPE, bool, bool) noexcept
 #define INSTANCIATE_INTEGRAL
-#include "instanciate_template.hpp"
+#include "fmt/instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
 #define INSTANCIATE_TEMPLATE(TYPE) template std::string_view toOctString(TYPE, bool) noexcept
 #define INSTANCIATE_INTEGRAL
-#include "instanciate_template.hpp"
+#include "fmt/instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
 } // namespace fmt

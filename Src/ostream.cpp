@@ -4,9 +4,9 @@
 
 #include "fmt/ostream.hpp"
 #include "fmt/string_conv.hpp"
-#include "va_list.hpp"
-#include "format_options.hpp"
-#include "formatted_writer.hpp"
+#include "fmt/va_list.hpp"
+#include "fmt/format_options.hpp"
+#include "fmt/formatted_writer.hpp"
 
 
 using namespace std::string_view_literals;
@@ -339,7 +339,7 @@ ostream & endl(ostream &stream) noexcept
 #define INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept
 #define INSTANCIATE_INTEGRAL
 #define INSTANCIATE_FLOATING_POINT
-#include "instanciate_template.hpp"
+#include "fmt/instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
 } // namespace fmt
