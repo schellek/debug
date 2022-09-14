@@ -2,8 +2,7 @@
 
 #define IS_FLAG_SET(BITFIELD, FLAG)  (((BITFIELD) & (FLAG)) != 0)
 
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 FormattedWriter::FormattedWriter(ostream &stream) noexcept
   : ostream{stream}
@@ -112,4 +111,4 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
   return written;
 }
 
-} // namespace fmt
+FMT_END_NAMESPACE

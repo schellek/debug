@@ -3,9 +3,7 @@
 
 #include "fmt/format_options.hpp"
 
-
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 static constexpr FormatOptions DEFAULT_FORMATTING =
 {
@@ -164,4 +162,4 @@ static const char * parseFlag(const char *str, FormatOptions &formatOptions) noe
   return str;
 }
 
-} // namespace fmt
+FMT_END_NAMESPACE

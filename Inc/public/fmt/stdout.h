@@ -1,31 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
+#include "fmt/fmt.h"
 
-#ifndef FMT_ENDL
-#define FMT_ENDL "\n"
-#endif
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1600)
-#define FMT_PRINTF_FMTSTR         _Printf_format_string_
-#define FMT_PRINTF_FUNC(FMT_ARG)
-
-#elif defined(__GNUC__)
-#define FMT_PRINTF_FMTSTR
-#define FMT_PRINTF_FUNC(FMT_ARG)  __attribute__((format(__printf__, FMT_ARG, FMT_ARG + 1)))
-
-#else
-#define FMT_PRINTF_FMTSTR
-#define FMT_PRINTF_FUNC(FMT_ARG)
-
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
-typedef uint16_t fmt_size_type;
+FMT_BEGIN_GLOBAL_NAMESPACE
 
 /**
  * @brief         Writes a string to stdout
@@ -77,7 +54,7 @@ int fmt_snprintf(char *buf, size_t n, FMT_PRINTF_FMTSTR const char *str, ...) FM
 /**
  * @brief         Writes a string to stdout followed by an end of line
  * @param[in]     str: String to be written
- * @return        uint16_t: Number of characters written
+ * @return        int: Number of characters written
  */
 int fmt_puts(const char *str);
 
@@ -103,6 +80,4 @@ void fmt_flush(void);
  */
 void fmt_assert_failed(const char *expr, const char *file, uint32_t line);
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+FMT_END_GLOBAL_NAMESPACE

@@ -3,11 +3,10 @@
 #include <cstdint>
 #include <string_view>
 
-#include "fmt/ostream.hpp"
+#include "fmt/fmt.h"
 #include "fmt/va_list.hpp"
 
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 enum class trait : uint8_t
 {
@@ -40,4 +39,4 @@ const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &fo
 const char * parseArgTraitment(const char *str, trait &argTraitment) noexcept;
 bool formattingIsRequired(const FormatOptions &formatOptions) noexcept;
 
-} // namespace fmt
+FMT_END_NAMESPACE

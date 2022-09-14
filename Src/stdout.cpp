@@ -1,18 +1,16 @@
 #include <cstdlib>
-
 #include <algorithm>
 
-#include "fmt/stdout.h"
 #include "fmt/ostream.hpp"
-
+#include "fmt/stdout.h"
 
 static char *stringBufferPos, *stringBufferEnd;
 
 static fmt_size_type StringBufferWrite(const char *str, fmt_size_type size) noexcept;
 
-fmt_size_type fmt_write(const char *str, uint16_t len)
+fmt_size_type fmt_write(const char *str, fmt_size_type len)
 {
-  return fmt::cout.write(str, len);
+  return FMT_ABI::cout.write(str, len);
 }
 
 int fmt_printf(const char *str, ...)
@@ -21,7 +19,7 @@ int fmt_printf(const char *str, ...)
   int retval;
 
   va_start(args, str);
-  retval = fmt::cout.vprintf(str, args);
+  retval = FMT_ABI::cout.vprintf(str, args);
   va_end(args);
 
   return retval;
@@ -32,7 +30,7 @@ int fmt_sprintf(char *buf, const char *str, ...)
   stringBufferPos = buf;
   stringBufferEnd = nullptr;
 
-  fmt::ostream sstream{&StringBufferWrite};
+  FMT_ABI::ostream sstream{&StringBufferWrite};
 
   va_list args;
   int retval;
@@ -51,7 +49,7 @@ int fmt_snprintf(char *buf, size_t n, const char *str, ...)
   stringBufferPos = buf;
   stringBufferEnd = buf + n - 1U;
 
-  fmt::ostream sstream{&StringBufferWrite};
+  FMT_ABI::ostream sstream{&StringBufferWrite};
 
   va_list args;
   int retval;
@@ -67,31 +65,29 @@ int fmt_snprintf(char *buf, size_t n, const char *str, ...)
 
 int fmt_puts(const char *str)
 {
-  using namespace std::string_view_literals;
-
-  fmt_size_type len = fmt::cout.write(std::string_view{str});
-  len += fmt::cout.write(FMT_ENDL ""sv);
+  fmt_size_type len = FMT_ABI::cout.write(std::string_view{str});
+  len += FMT_ABI::cout.write(FMT_ENDL, static_cast<fmt_size_type>(sizeof(FMT_ENDL) - 1U));
 
   return static_cast<int>(len);
 }
 
 int fmt_putchar(int c)
 {
-  fmt::cout.write(static_cast<char>(c));
+  FMT_ABI::cout.write(static_cast<char>(c));
   return static_cast<int>(c);
 }
 
 void fmt_flush(void)
 {
-  fmt::flush(fmt::cout);
+  FMT_ABI::flush(FMT_ABI::cout);
 }
 
 void fmt_assert_failed(const char *expr, const char *file, uint32_t line)
 {
   if (nullptr != expr)
-    fmt::cout << "Assertion failed: " << expr << ", file " << file << ", line " << line << fmt::endl;
+    FMT_ABI::cout << "Assertion failed: " << expr << ", file " << file << ", line " << line << FMT_ABI::endl;
   else
-    fmt::cout << "Assertion failed: file " << file << ", line " << line << fmt::endl;
+    FMT_ABI::cout << "Assertion failed: file " << file << ", line " << line << FMT_ABI::endl;
 
   exit(EXIT_FAILURE);
 }

@@ -3,6 +3,10 @@
 #include <cstdarg>
 #include <type_traits>
 
+#include "fmt/fmt.h"
+
+FMT_BEGIN_NAMESPACE
+
 class VaList
 {
 private:
@@ -39,3 +43,5 @@ inline T VaList::getArg(void) noexcept
 
   return static_cast<T>(va_arg(m_list, pass_t));
 }
+
+FMT_END_NAMESPACE

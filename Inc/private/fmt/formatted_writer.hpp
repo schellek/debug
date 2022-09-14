@@ -1,10 +1,10 @@
 #pragma once
 
+#include "fmt/fmt.h"
 #include "fmt/ostream.hpp"
 #include "fmt/format_options.hpp"
 
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 namespace ArgFlag
 {
@@ -28,4 +28,4 @@ struct FormattedWriter : public ostream
   size_type operator()(std::string_view toBeWritten, const FormatOptions options, const uint8_t argFlags) noexcept;
 };
 
-} // namespace fmt
+FMT_END_NAMESPACE

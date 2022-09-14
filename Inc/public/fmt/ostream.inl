@@ -1,17 +1,21 @@
 #pragma once
 
 #include "fmt/ostream.hpp"
-#include "fmt/stdout.h"
 
+FMT_BEGIN_NAMESPACE
 
-namespace fmt
-{
-
-template <typename T>
-ostream & ostream::operator<<(T *value) noexcept
+template <typename ptr_t, std::enable_if_t<std::is_pointer<ptr_t>::value, bool>>
+ostream & ostream::operator<<(ptr_t value) noexcept
 {
   *this << reinterpret_cast<const void *>(value);
   return *this;
 }
 
-} // namespace fmt
+template <typename ptr_t, std::enable_if_t<IsSmartPtr<ptr_t>::value, bool>>
+ostream & ostream::operator<<(ptr_t &value) noexcept
+{
+  *this << value.get();
+  return *this;
+}
+
+FMT_END_NAMESPACE

@@ -15,11 +15,13 @@ target_sources(${FMT_LIB}
   ${CMAKE_CURRENT_LIST_DIR}/Src/ostream.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/format_options.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/formatted_writer.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv_int.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv_float.cpp
 )
 
 target_include_directories(${FMT_LIB}
-  PRIVATE ${CMAKE_CURRENT_LIST_DIR}/Inc/private
+  PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}/Inc/private
 )
 
 include(fmt.cmake)

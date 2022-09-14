@@ -1,17 +1,12 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
 #include <cstdarg>
-
 #include <string_view>
-#include <type_traits>
 
-#include "fmt/stdout.h"
+#include "fmt/fmt.h"
+#include "fmt/type_traits.hpp"
 
-
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 class ostream
 {
@@ -39,20 +34,24 @@ public:
   int vprintf(const char *str, va_list args) noexcept;
   int printf(FMT_PRINTF_FMTSTR const char *str, ...) noexcept FMT_PRINTF_FUNC(2);
 
-  template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool> = true>
-  ostream & operator<<(int_t value) noexcept;
-
-  template <typename float_t, std::enable_if_t<std::is_floating_point_v<float_t>, bool> = true>
-  ostream & operator<<(float_t value) noexcept;
-
   ostream & operator<<(bool value) noexcept;
   ostream & operator<<(char value) noexcept;
   ostream & operator<<(char *str) noexcept;
   ostream & operator<<(const char *str) noexcept;
   ostream & operator<<(std::string_view str) noexcept;
+  ostream & operator<<(std::nullptr_t) noexcept;
 
-  template <typename T>
-  ostream & operator<<(T *value) noexcept;
+  template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
+  ostream & operator<<(int_t value) noexcept;
+
+  template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool> = true>
+  ostream & operator<<(float_t value) noexcept;
+
+  template <typename ptr_t, std::enable_if_t<std::is_pointer<ptr_t>::value, bool> = true>
+  ostream & operator<<(ptr_t value) noexcept;
+
+  template <typename ptr_t, std::enable_if_t<IsSmartPtr<ptr_t>::value, bool> = true>
+  ostream & operator<<(ptr_t &value) noexcept;
 
   ostream & operator<<(const void *addr) noexcept;
   ostream & operator<<(manip_func &function) noexcept;
@@ -63,6 +62,6 @@ ostream & endl(ostream &stream) noexcept;
 
 extern ostream cout;
 
-} // namespace fmt
+FMT_END_NAMESPACE
 
 #include "ostream.inl"

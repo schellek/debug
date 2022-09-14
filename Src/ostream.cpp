@@ -1,27 +1,20 @@
-#include <cstring>
 #include <cstdlib>
 #include <cctype>
 
-#include "fmt/ostream.hpp"
 #include "fmt/string_conv.hpp"
 #include "fmt/va_list.hpp"
 #include "fmt/format_options.hpp"
 #include "fmt/formatted_writer.hpp"
 
+FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
-
-namespace fmt
-{
-
 using ssize_t = std::make_signed_t<size_t>;
 using uptrdiff_t = std::make_unsigned_t<ptrdiff_t>;
 
 ostream::ostream(write_func *write, flush_func *flush) noexcept
   : m_write{write}, m_flush{flush}
 {
-  if (write == nullptr)
-    exit(EXIT_FAILURE);
 }
 
 ostream::size_type ostream::write(char c) noexcept
@@ -264,14 +257,14 @@ int ostream::printf(const char *str, ...) noexcept
   return retval;
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool>>
+template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
 ostream & ostream::operator<<(int_t value) noexcept
 {
   write(toString(value));
   return *this;
 }
 
-template <typename float_t, std::enable_if_t<std::is_floating_point_v<float_t>, bool>>
+template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool>>
 ostream & ostream::operator<<(float_t value) noexcept
 {
   write(toString(value));
@@ -310,6 +303,12 @@ ostream & ostream::operator<<(std::string_view str) noexcept
   return *this;
 }
 
+ostream & ostream::operator<<(std::nullptr_t) noexcept
+{
+  write("nullptr"sv);
+  return *this;
+}
+
 ostream & ostream::operator<<(const void *addr) noexcept
 {
   write(toHexString(reinterpret_cast<uintptr_t>(addr), false, true));
@@ -342,4 +341,4 @@ ostream & endl(ostream &stream) noexcept
 #include "fmt/instanciate_template.hpp"
 #undef INSTANCIATE_TEMPLATE
 
-} // namespace fmt
+FMT_END_NAMESPACE
