@@ -82,7 +82,7 @@ static constexpr bool isInf(ieee754_t value) noexcept;
 template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool>>
 std::string_view toString(float_t value) noexcept
 {
-  using ieee754_t = std::conditional_t<std::is_same_v<float_t, float>, Ieee754Single, Ieee754Double>;
+  using ieee754_t = std::conditional_t<std::is_same<float_t, float>::value, Ieee754Single, Ieee754Double>;
 
   std::string_view retval;
   ieee754_t num{value};

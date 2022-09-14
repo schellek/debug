@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstdarg>
-#include <type_traits>
 
 #include "fmt/fmt.h"
+#include "fmt/type_traits.hpp"
 
 FMT_BEGIN_NAMESPACE
 
@@ -16,7 +16,13 @@ public:
   VaList(va_list list) noexcept;
   ~VaList() noexcept;
 
-  template <typename T>
+  template <typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+  T getArg(void) noexcept;
+
+  template <typename T, std::enable_if_t<std::is_floating_point<T>::value, bool> = true>
+  T getArg(void) noexcept;
+
+  template <typename T, std::enable_if_t<std::is_pointer<T>::value, bool> = true>
   T getArg(void) noexcept;
 };
 
@@ -30,18 +36,24 @@ inline VaList::~VaList() noexcept
   va_end(m_list);
 }
 
-template <typename T>
+template <typename T, std::enable_if_t<std::is_integral<T>::value, bool>>
 inline T VaList::getArg(void) noexcept
 {
-  static_assert(std::is_arithmetic_v<std::remove_pointer_t<T>> || std::is_same_v<T, void *>);
+  using PassType = std::conditional_t<sizeof(T) < sizeof(int), int, T>;
+  return static_cast<T>(va_arg(m_list, PassType));
+}
 
-  using pass_t =  std::conditional_t<std::is_integral_v<T> && (sizeof(T) < sizeof(int)),
-                    int,
-                    std::conditional_t<std::is_same_v<T, float>,
-                      double,
-                      T>>;
+template <typename T, std::enable_if_t<std::is_floating_point<T>::value, bool>>
+inline T VaList::getArg(void) noexcept
+{
+  using PassType = std::conditional_t<sizeof(T) < sizeof(double), double, T>;
+  return static_cast<T>(va_arg(m_list, PassType));
+}
 
-  return static_cast<T>(va_arg(m_list, pass_t));
+template <typename T, std::enable_if_t<std::is_pointer<T>::value, bool>>
+inline T VaList::getArg(void) noexcept
+{
+  return va_arg(m_list, T);
 }
 
 FMT_END_NAMESPACE

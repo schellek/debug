@@ -4,6 +4,7 @@
 #include <string_view>
 #include <string>
 #include <memory>
+
 #include "fmt/fmt.h"
 
 FMT_BEGIN_NAMESPACE
@@ -15,16 +16,28 @@ template <typename U, typename ...V>
 inline constexpr bool IsAnyOf_v = IsAnyOf<U, V...>::value;
 
 template <typename T>
-using RemoveCV = std::remove_cv<T>;
+using RemoveConst = std::remove_const<T>;
 
 template <typename T>
-using RemoveCV_t = typename RemoveCV<T>::type;
+using RemoveConst_t = typename std::remove_const<T>::type;
 
 template <typename T>
-using AddCV = std::add_cv<T>;
+using AddConst = std::add_const<T>;
 
 template <typename T>
-using AddCV_t = typename AddCV<T>::type;
+using AddConst_t = typename AddConst<T>::type;
+
+template <typename T>
+using RemoveVolatile = std::remove_volatile<T>;
+
+template <typename T>
+using RemoveVolatile_t = typename RemoveVolatile<T>::type;
+
+template <typename T>
+using AddVolatile = std::add_volatile<T>;
+
+template <typename T>
+using AddVolatile_t = typename AddVolatile<T>::type;
 
 template <typename T>
 using RemoveRef = std::remove_reference<T>;
@@ -37,6 +50,30 @@ using AddRef = std::add_lvalue_reference<T>;
 
 template <typename T>
 using AddRef_t = typename AddRef<T>::type;
+
+template <typename T>
+using RemoveConstRef = RemoveRef<RemoveConst_t<T>>;
+
+template <typename T>
+using RemoveConstRef_t = typename RemoveConstRef<T>::type;
+
+template <typename T>
+using AddConstRef = AddRef<AddConst_t<T>>;
+
+template <typename T>
+using AddConstRef_t = typename AddConstRef<T>::type;
+
+template <typename T>
+using RemoveCV = std::remove_cv<T>;
+
+template <typename T>
+using RemoveCV_t = typename RemoveCV<T>::type;
+
+template <typename T>
+using AddCV = std::add_cv<T>;
+
+template <typename T>
+using AddCV_t = typename AddCV<T>::type;
 
 template <typename T>
 struct RemoveCVRef : RemoveCV<RemoveRef_t<T>> {};
@@ -74,11 +111,11 @@ struct RemoveCVFromPtr : __RemoveCVFromPtr<T> {};
 template <typename T>
 using RemoveCVFromPtr_t = typename RemoveCVFromPtr<T>::type;
 
-template <typename T, typename D = std::default_delete<T>>
+template <typename T>
 struct __IsSmartPtr : std::false_type {};
 
-template <typename T, typename D>
-struct __IsSmartPtr<std::unique_ptr<T, D>> : std::true_type {};
+template <typename ...T>
+struct __IsSmartPtr<std::unique_ptr<T...>> : std::true_type {};
 
 template <typename T>
 struct __IsSmartPtr<std::shared_ptr<T>> : std::true_type {};
@@ -87,10 +124,16 @@ template <typename T>
 struct __IsSmartPtr<std::weak_ptr<T>> : std::true_type {};
 
 template <typename T>
-struct IsSmartPtr : __IsSmartPtr<RemoveCVRef_t<T>> {};
+struct IsSmartPtr : __IsSmartPtr<RemoveConstRef_t<T>> {};
 
 template <typename T>
-struct IsCharType : public std::is_same<RemoveCVRef_t<T>, char> {};
+inline constexpr bool IsSmartPtr_v = IsSmartPtr<T>::value;
+
+template <typename T>
+struct IsChar : public std::is_same<RemoveCVRef_t<T>, char> {};
+
+template <typename T>
+inline constexpr bool IsChar_v = IsChar<T>::value;
 
 template <typename T>
 struct __IsStringType : std::false_type {};
@@ -105,6 +148,9 @@ template <>
 struct __IsStringType<std::string_view> : std::true_type {};
 
 template <typename T>
-struct IsStringType : __IsStringType<RemoveCVFromPtr_t<RemoveCVRef_t<T>>> {};
+struct IsStringType : __IsStringType<RemoveCVFromPtr_t<RemoveConstRef_t<T>>> {};
+
+template <typename T>
+inline constexpr bool IsStringType_v = IsStringType<T>::value;
 
 FMT_END_NAMESPACE

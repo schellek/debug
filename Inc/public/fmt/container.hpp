@@ -1,18 +1,7 @@
 #pragma once
 
-#include <array>
-#include <vector>
-#include <deque>
-#include <forward_list>
-#include <list>
-#include <set>
-#include <unordered_set>
-#include <map>
-#include <unordered_map>
-#include <tuple>
-#include <string>
-
 #include "fmt/fmt.h"
+#include "fmt/container_type_traits.hpp"
 
 FMT_BEGIN_NAMESPACE
 
@@ -32,32 +21,11 @@ FMT_END_NAMESPACE
 
 FMT_ABI::ostream & operator<<(FMT_ABI::ostream &stream, const std::string &str) noexcept;
 
-template <typename OStream, typename T, size_t N>
-OStream & operator<<(OStream &stream, const std::array<T, N> &array) noexcept;
+template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsContainer<T>::value, bool> = true>
+OStream & operator<<(OStream &stream, const T &container) noexcept;
 
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::vector<T, Alloc> &vector) noexcept;
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::deque<T, Alloc> &deque) noexcept;
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::forward_list<T, Alloc> &list) noexcept;
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::list<T, Alloc> &list) noexcept;
-
-template <typename OStream, typename Key, typename Compare, typename Alloc>
-OStream & operator<<(OStream &stream, const std::set<Key, Compare, Alloc> &set) noexcept;
-
-template <typename OStream, typename Key, typename Hash, typename Pred, typename Alloc>
-OStream & operator<<(OStream &stream, const std::unordered_set<Key, Hash, Pred, Alloc> &set) noexcept;
-
-template <typename OStream, typename Key, typename Value, typename Compare, typename Alloc>
-OStream & operator<<(OStream &stream, const std::map<Key, Value, Compare, Alloc> &map) noexcept;
-
-template <typename OStream, typename Key, typename Value, typename Hash, typename Pred, typename Alloc>
-OStream & operator<<(OStream &stream, const std::unordered_map<Key, Value, Hash, Pred, Alloc> &map) noexcept;
+template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsMap<T>::value, bool> = true>
+OStream & operator<<(OStream &stream, const T &map) noexcept;
 
 template <typename OStream, typename ...T>
 OStream & operator<<(OStream &stream, const std::tuple<T...> &tuple) noexcept;

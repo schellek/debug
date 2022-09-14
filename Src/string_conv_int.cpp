@@ -22,7 +22,7 @@ template <typename T>
 using FastInt = std::conditional_t<std::is_signed<T>::value, FastSignedInt<T>, FastUnsignedInt<T>>;
 
 template <typename T>
-using FastBitpatternInt = std::conditional_t<std::is_signed<T>::value, std::make_unsigned_t<T>, FastUnsignedInt<T>>;
+using FastBitPatternInt = std::conditional_t<std::is_signed<T>::value, std::make_unsigned_t<T>, FastUnsignedInt<T>>;
 
 template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
 static std::string_view _toString(int_t value) noexcept;
@@ -47,13 +47,13 @@ std::string_view toString(int_t value) noexcept
 template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
 std::string_view toHexString(int_t value, bool uppercase, bool prefix) noexcept
 {
-  return _toHexString(static_cast<FastBitpatternInt<int_t>>(value), uppercase, prefix);
+  return _toHexString(static_cast<FastBitPatternInt<int_t>>(value), uppercase, prefix);
 }
 
 template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
 std::string_view toOctString(int_t value, bool prefix) noexcept
 {
-  return _toOctString(static_cast<FastBitpatternInt<int_t>>(value), prefix);
+  return _toOctString(static_cast<FastBitPatternInt<int_t>>(value), prefix);
 }
 
 template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
@@ -62,10 +62,10 @@ static std::string_view _toString(int_t value) noexcept
   int_t nextIterValue;
   bool sign = false;
 
-  char *const end = StringConvBuffer + std::numeric_limits<int_t>::digits10 + ((std::is_signed_v<int_t>) ? 2U : 1U);
+  char *const end = StringConvBuffer + std::numeric_limits<int_t>::digits10 + (std::is_signed<int_t>::value ? 2U : 1U);
   char *begin = end;
 
-  if constexpr (std::is_unsigned_v<int_t>)
+  if constexpr (std::is_unsigned<int_t>::value)
   {
     /* Do nothing */
   }
@@ -82,7 +82,7 @@ static std::string_view _toString(int_t value) noexcept
     value = nextIterValue;
   } while (value);
 
-  if constexpr (std::is_unsigned_v<int_t>)
+  if constexpr (std::is_unsigned<int_t>::value)
     /* Do nothing */;
   else if (sign)
     *(--begin) = '-';

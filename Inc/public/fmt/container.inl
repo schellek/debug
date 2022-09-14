@@ -13,7 +13,7 @@ void streamElement(OStream &stream, Iterator element) noexcept
 
   if constexpr (IsStringType<T>::value)
     stream << '\"' << *element << '\"';
-  else if constexpr (IsCharType<T>::value)
+  else if constexpr (IsChar<T>::value)
     stream << '\'' << *element << '\'';
   else
     stream << *element;
@@ -98,56 +98,14 @@ FMT_ABI::ostream & operator<<(FMT_ABI::ostream &stream, const std::string &str) 
   return stream;
 }
 
-template <typename OStream, typename T, size_t N>
-OStream & operator<<(OStream &stream, const std::array<T, N> &array) noexcept
+template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsContainer<T>::value, bool>>
+OStream & operator<<(OStream &stream, const T &container) noexcept
 {
-  return FMT_ABI::streamContainer(stream, array.cbegin(), array.cend());
+  return FMT_ABI::streamContainer(stream, container.cbegin(), container.cend());
 }
 
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::vector<T, Alloc> &vector) noexcept
-{
-  return FMT_ABI::streamContainer(stream, vector.cbegin(), vector.cend());
-}
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::deque<T, Alloc> &deque) noexcept
-{
-  return FMT_ABI::streamContainer(stream, deque.cbegin(), deque.cend());
-}
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::forward_list<T, Alloc> &list) noexcept
-{
-  return FMT_ABI::streamContainer(stream, list.cbegin(), list.cend());
-}
-
-template <typename OStream, typename T, typename Alloc>
-OStream & operator<<(OStream &stream, const std::list<T, Alloc> &list) noexcept
-{
-  return FMT_ABI::streamContainer(stream, list.cbegin(), list.cend());
-}
-
-template <typename OStream, typename Key, typename Compare, typename Alloc>
-OStream & operator<<(OStream &stream, const std::set<Key, Compare, Alloc> &set) noexcept
-{
-  return FMT_ABI::streamContainer(stream, set.cbegin(), set.cend());
-}
-
-template <typename OStream, typename Key, typename Hash, typename Pred, typename Alloc>
-OStream & operator<<(OStream &stream, const std::unordered_set<Key, Hash, Pred, Alloc> &set) noexcept
-{
-  return FMT_ABI::streamContainer(stream, set.cbegin(), set.cend());
-}
-
-template <typename OStream, typename Key, typename Value, typename Compare, typename Alloc>
-OStream & operator<<(OStream &stream, const std::map<Key, Value, Compare, Alloc> &map) noexcept
-{
-  return FMT_ABI::streamMap(stream, map.cbegin(), map.cend());
-}
-
-template <typename OStream, typename Key, typename Value, typename Hash, typename Pred, typename Alloc>
-OStream & operator<<(OStream &stream, const std::unordered_map<Key, Value, Hash, Pred, Alloc> &map) noexcept
+template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsMap<T>::value, bool>>
+OStream & operator<<(OStream &stream, const T &map) noexcept
 {
   return FMT_ABI::streamMap(stream, map.cbegin(), map.cend());
 }
