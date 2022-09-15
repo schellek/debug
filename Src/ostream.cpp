@@ -335,10 +335,10 @@ ostream & endl(ostream &stream) noexcept
   return stream;
 }
 
-#define INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept
-#define INSTANCIATE_INTEGRAL
-#define INSTANCIATE_FLOATING_POINT
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept
+#define FMT_INSTANCIATE_INTEGRAL
+#define FMT_INSTANCIATE_FLOATING_POINT
 #include "fmt/instanciate_template.hpp"
-#undef INSTANCIATE_TEMPLATE
+#undef FMT_INSTANCIATE_TEMPLATE
 
 FMT_END_NAMESPACE

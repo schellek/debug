@@ -133,17 +133,17 @@ static std::string_view _toOctString(int_t value, bool prefix) noexcept
 
 FMT_END_NAMESPACE
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toString(TYPE) noexcept
-#define INSTANCIATE_INTEGRAL
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toString(TYPE) noexcept
+#define FMT_INSTANCIATE_INTEGRAL
 #include "fmt/instanciate_template.hpp"
-#undef INSTANCIATE_TEMPLATE
+#undef FMT_INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toHexString(TYPE, bool, bool) noexcept
-#define INSTANCIATE_INTEGRAL
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toHexString(TYPE, bool, bool) noexcept
+#define FMT_INSTANCIATE_INTEGRAL
 #include "fmt/instanciate_template.hpp"
-#undef INSTANCIATE_TEMPLATE
+#undef FMT_INSTANCIATE_TEMPLATE
 
-#define INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toOctString(TYPE, bool) noexcept
-#define INSTANCIATE_INTEGRAL
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::toOctString(TYPE, bool) noexcept
+#define FMT_INSTANCIATE_INTEGRAL
 #include "fmt/instanciate_template.hpp"
-#undef INSTANCIATE_TEMPLATE
+#undef FMT_INSTANCIATE_TEMPLATE
