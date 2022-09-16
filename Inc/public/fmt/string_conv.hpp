@@ -1,9 +1,9 @@
 #pragma once
 
 #include <string_view>
-#include <type_traits>
 
 #include "fmt/fmt.h"
+#include <fmt/type_traits.hpp>
 
 FMT_BEGIN_NAMESPACE
 
@@ -21,8 +21,8 @@ std::string_view toString(bool value) noexcept;
  * @param[in]     value: Value, that is to be converted
  * @return        std::string_view
  */
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-std::string_view toString(int_t value) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+std::string_view toString(T value) noexcept;
 
 /**
  * @brief         Converts a floating point value to a decimal string representation
@@ -31,8 +31,8 @@ std::string_view toString(int_t value) noexcept;
  * @param[in]     value: Value, that is to be converted
  * @return        std::string_view
  */
-template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool> = true>
-std::string_view toString(float_t value) noexcept;
+template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
+std::string_view toString(T value) noexcept;
 
 /**
  * @brief         Converts an integral value to a hexadecimal string representation
@@ -43,8 +43,8 @@ std::string_view toString(float_t value) noexcept;
  * @param[in]     prefix: Flag, to convert the value with prefix 0x or 0X
  * @return        std::string_view
  */
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-std::string_view toHexString(int_t value, bool uppercase = false, bool prefix = false) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+std::string_view toHexString(T value, bool uppercase = false, bool prefix = false) noexcept;
 
 /**
  * @brief         Converts an integral value to a octal string representation
@@ -54,7 +54,7 @@ std::string_view toHexString(int_t value, bool uppercase = false, bool prefix = 
  * @param[in]     prefix: Flag, to convert the value with prefix 0
  * @return        std::string_view
  */
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-std::string_view toOctString(int_t value, bool prefix = false) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+std::string_view toOctString(T value, bool prefix = false) noexcept;
 
 FMT_END_NAMESPACE

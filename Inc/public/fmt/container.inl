@@ -9,11 +9,11 @@ FMT_BEGIN_NAMESPACE
 template <typename OStream, typename Iterator>
 void streamElement(OStream &stream, Iterator element) noexcept
 {
-  using T = decltype(*element);
+  using T = RemoveCVRefT<decltype(*element)>;
 
-  if constexpr (IsStringType<T>::value)
+  if constexpr (IsStringTypeV<T>)
     stream << '\"' << *element << '\"';
-  else if constexpr (IsChar<T>::value)
+  else if constexpr (IsSameV<T, char>)
     stream << '\'' << *element << '\'';
   else
     stream << *element;
@@ -98,13 +98,13 @@ FMT_ABI::ostream & operator<<(FMT_ABI::ostream &stream, const std::string &str) 
   return stream;
 }
 
-template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsContainer<T>::value, bool>>
+template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsContainerV<T>>>
 OStream & operator<<(OStream &stream, const T &container) noexcept
 {
   return FMT_ABI::streamContainer(stream, container.cbegin(), container.cend());
 }
 
-template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsMap<T>::value, bool>>
+template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsMapV<T>>>
 OStream & operator<<(OStream &stream, const T &map) noexcept
 {
   return FMT_ABI::streamMap(stream, map.cbegin(), map.cend());

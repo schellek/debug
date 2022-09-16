@@ -21,10 +21,10 @@ FMT_END_NAMESPACE
 
 FMT_ABI::ostream & operator<<(FMT_ABI::ostream &stream, const std::string &str) noexcept;
 
-template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsContainer<T>::value, bool> = true>
+template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsContainerV<T>> = true>
 OStream & operator<<(OStream &stream, const T &container) noexcept;
 
-template <typename OStream, typename T, std::enable_if_t<FMT_ABI::__IsMap<T>::value, bool> = true>
+template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsMapV<T>> = true>
 OStream & operator<<(OStream &stream, const T &map) noexcept;
 
 template <typename OStream, typename ...T>

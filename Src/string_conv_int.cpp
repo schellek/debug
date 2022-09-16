@@ -13,59 +13,59 @@ static constexpr char HEX_LOOKUP[2U][16U] =
 };
 
 template <typename T>
-using FastSignedInt = std::conditional_t<sizeof(T) <= sizeof(int), int, T>;
+using FastSignedInt = ConditionalT<sizeof(T) <= sizeof(int), int, T>;
 
 template <typename T>
-using FastUnsignedInt = std::make_unsigned_t<FastSignedInt<T>>;
+using FastUnsignedInt = MakeUnsignedT<FastSignedInt<T>>;
 
 template <typename T>
-using FastInt = std::conditional_t<std::is_signed<T>::value, FastSignedInt<T>, FastUnsignedInt<T>>;
+using FastInt = ConditionalT<IsSignedV<T>, FastSignedInt<T>, FastUnsignedInt<T>>;
 
 template <typename T>
-using FastBitPatternInt = std::conditional_t<std::is_signed<T>::value, std::make_unsigned_t<T>, FastUnsignedInt<T>>;
+using FastBitPatternInt = ConditionalT<IsSignedV<T>, MakeUnsignedT<T>, FastUnsignedInt<T>>;
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-static std::string_view _toString(int_t value) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+static std::string_view _toString(T value) noexcept;
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-static std::string_view _toHexString(int_t value, bool uppercase, bool prefix) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+static std::string_view _toHexString(T value, bool uppercase, bool prefix) noexcept;
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-static std::string_view _toOctString(int_t value, bool prefix) noexcept;
+template <typename T, EnableIfT<IsIntegralV<T>> = true>
+static std::string_view _toOctString(T value, bool prefix) noexcept;
 
 std::string_view toString(bool value) noexcept
 {
   return (value) ? "true"sv : "false"sv;
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-std::string_view toString(int_t value) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+std::string_view toString(T value) noexcept
 {
-  return _toString(static_cast<FastInt<int_t>>(value));
+  return _toString(static_cast<FastInt<T>>(value));
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-std::string_view toHexString(int_t value, bool uppercase, bool prefix) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+std::string_view toHexString(T value, bool uppercase, bool prefix) noexcept
 {
-  return _toHexString(static_cast<FastBitPatternInt<int_t>>(value), uppercase, prefix);
+  return _toHexString(static_cast<FastBitPatternInt<T>>(value), uppercase, prefix);
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-std::string_view toOctString(int_t value, bool prefix) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+std::string_view toOctString(T value, bool prefix) noexcept
 {
-  return _toOctString(static_cast<FastBitPatternInt<int_t>>(value), prefix);
+  return _toOctString(static_cast<FastBitPatternInt<T>>(value), prefix);
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-static std::string_view _toString(int_t value) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+static std::string_view _toString(T value) noexcept
 {
-  int_t nextIterValue;
+  T nextIterValue;
   bool sign = false;
 
-  char *const end = StringConvBuffer + std::numeric_limits<int_t>::digits10 + (std::is_signed<int_t>::value ? 2U : 1U);
+  char *const end = StringConvBuffer + std::numeric_limits<T>::digits10 + (IsSignedV<T> ? 2U : 1U);
   char *begin = end;
 
-  if constexpr (std::is_unsigned<int_t>::value)
+  if constexpr (IsUnsignedV<T>)
   {
     /* Do nothing */
   }
@@ -82,7 +82,7 @@ static std::string_view _toString(int_t value) noexcept
     value = nextIterValue;
   } while (value);
 
-  if constexpr (std::is_unsigned<int_t>::value)
+  if constexpr (IsUnsignedV<T>)
     /* Do nothing */;
   else if (sign)
     *(--begin) = '-';
@@ -90,12 +90,12 @@ static std::string_view _toString(int_t value) noexcept
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-static std::string_view _toHexString(int_t value, bool uppercaseLetters, bool prefix) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+static std::string_view _toHexString(T value, bool uppercaseLetters, bool prefix) noexcept
 {
   const char (&hexLookup)[16U] = HEX_LOOKUP[uppercaseLetters ? 1U : 0U];
 
-  char *const end = StringConvBuffer + ((sizeof(int_t) * 8U) / 4U) + 2U;
+  char *const end = StringConvBuffer + ((sizeof(T) * 8U) / 4U) + 2U;
   char *begin = end;
 
   do
@@ -113,10 +113,10 @@ static std::string_view _toHexString(int_t value, bool uppercaseLetters, bool pr
   return {begin, static_cast<std::string_view::size_type>(end - begin)};
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-static std::string_view _toOctString(int_t value, bool prefix) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+static std::string_view _toOctString(T value, bool prefix) noexcept
 {
-  char *const end = StringConvBuffer + ((sizeof(int_t) * 8U) / 3U) + 2U;
+  char *const end = StringConvBuffer + ((sizeof(T) * 8U) / 3U) + 2U;
   char *begin = end;
 
   do

@@ -41,19 +41,19 @@ public:
   ostream & operator<<(std::string_view str) noexcept;
   ostream & operator<<(std::nullptr_t) noexcept;
 
-  template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool> = true>
-  ostream & operator<<(int_t value) noexcept;
+  template <typename T, EnableIfT<IsIntegralV<T>> = true>
+  ostream & operator<<(T value) noexcept;
 
-  template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool> = true>
-  ostream & operator<<(float_t value) noexcept;
+  template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
+  ostream & operator<<(T value) noexcept;
 
-  template <typename ptr_t, std::enable_if_t<std::is_pointer<ptr_t>::value, bool> = true>
-  ostream & operator<<(ptr_t value) noexcept;
+  template <typename T, EnableIfT<IsPointerV<T>> = true>
+  ostream & operator<<(T value) noexcept;
 
-  template <typename ptr_t, std::enable_if_t<IsSmartPtr<ptr_t>::value, bool> = true>
-  ostream & operator<<(ptr_t &value) noexcept;
+  template <typename T, EnableIfT<IsSmartPointerV<T>> = true>
+  ostream & operator<<(T &value) noexcept;
 
-  ostream & operator<<(const void *addr) noexcept;
+  ostream & operator<<(const void *p) noexcept;
   ostream & operator<<(manip_func &function) noexcept;
 };
 

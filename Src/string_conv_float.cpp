@@ -9,14 +9,14 @@ FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
 
-template <typename _float_t, std::enable_if_t<std::is_floating_point<_float_t>::value, bool> = true>
-static std::string_view _toString(FloatingPoint<_float_t> value) noexcept;
+template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
+static std::string_view _toString(FloatingPoint<T> value) noexcept;
 
-template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool>>
-std::string_view toString(float_t value) noexcept
+template <typename T, EnableIfT<IsFloatingPointV<T>>>
+std::string_view toString(T value) noexcept
 {
   std::string_view retval;
-  FloatingPoint<float_t> num{value};
+  FloatingPoint<T> num{value};
 
   if (num.isZero())
     retval = (num.b.sign) ? "-0"sv : "0";
@@ -33,12 +33,12 @@ std::string_view toString(float_t value) noexcept
   return retval;
 }
 
-template <typename _float_t, std::enable_if_t<std::is_floating_point<_float_t>::value, bool>>
-static std::string_view _toString(FloatingPoint<_float_t> value) noexcept
+template <typename T, EnableIfT<IsFloatingPointV<T>>>
+static std::string_view _toString(FloatingPoint<T> value) noexcept
 {
-  using float_t = typename FloatingPoint<_float_t>::float_t;
-  using uint_t  = typename FloatingPoint<_float_t>::uint_t;
-  using int_t   = typename FloatingPoint<_float_t>::int_t;
+  using float_t = typename FloatingPoint<T>::float_t;
+  using uint_t  = typename FloatingPoint<T>::uint_t;
+  using int_t   = typename FloatingPoint<T>::int_t;
 
   const int_t e = value.exponent();
   static_cast<void>(e);

@@ -7,14 +7,42 @@
 
 FMT_BEGIN_NAMESPACE
 
-template <size_t>
-struct Ieee754Layout;
+enum FloatingPointStandard
+{
+  Unknown = -1,
+  Ieee754,
+  Iec559 = Ieee754,
+  Bfloat
+};
+
+template <FloatingPointStandard, size_t>
+struct FloatingPointLayout;
 
 template <>
-struct Ieee754Layout<4U>
+struct FloatingPointLayout<Ieee754, 2U>
 {
-  using uint_t  = uint32_t;
+  enum : unsigned int
+  {
+    MANTISSA_WIDTH        = 10U,
+    BIASED_EXPONENT_WIDTH = 5U,
+    SIGN_WIDTH            = 1U
+  };
+};
 
+template <>
+struct FloatingPointLayout<Bfloat, 2U>
+{
+  enum : unsigned int
+  {
+    MANTISSA_WIDTH        = 7U,
+    BIASED_EXPONENT_WIDTH = 8U,
+    SIGN_WIDTH            = 1U
+  };
+};
+
+template <>
+struct FloatingPointLayout<Ieee754, 4U>
+{
   enum : unsigned int
   {
     MANTISSA_WIDTH        = 23U,
@@ -24,10 +52,8 @@ struct Ieee754Layout<4U>
 };
 
 template <>
-struct Ieee754Layout<8U>
+struct FloatingPointLayout<Ieee754, 8U>
 {
-  using uint_t  = uint64_t;
-
   enum : unsigned int
   {
     MANTISSA_WIDTH        = 52U,
@@ -36,16 +62,28 @@ struct Ieee754Layout<8U>
   };
 };
 
-template <typename _float_t>
+template <>
+struct FloatingPointLayout<Ieee754, 16U>
+{
+  enum : unsigned int
+  {
+    MANTISSA_WIDTH        = 112U,
+    BIASED_EXPONENT_WIDTH = 15U,
+    SIGN_WIDTH            = 1U
+  };
+};
+
+template <typename T>
 union FloatingPoint
 {
-  using float_t  = _float_t;
-  using layout_t = std::conditional_t<std::numeric_limits<_float_t>::is_iec559,
-    Ieee754Layout<sizeof(_float_t)>,
-    void>;
+private:
+  static constexpr FloatingPointStandard _standard(void) noexcept;
 
-  using uint_t   = typename layout_t::uint_t;
-  using int_t    = std::make_signed_t<uint_t>;
+public:
+  using float_t  = T;
+  using layout_t = FloatingPointLayout<_standard(), sizeof(float_t)>;
+  using uint_t   = UnsignedIntT<sizeof(float_t)>;
+  using int_t    = SignedIntT<sizeof(float_t)>;
 
   enum : unsigned int
   {

@@ -9,8 +9,8 @@
 FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
-using ssize_t = std::make_signed_t<size_t>;
-using uptrdiff_t = std::make_unsigned_t<ptrdiff_t>;
+using ssize_t = MakeSignedT<size_t>;
+using uptrdiff_t = MakeUnsignedT<ptrdiff_t>;
 
 ostream::ostream(write_func *write, flush_func *flush) noexcept
   : m_write{write}, m_flush{flush}
@@ -19,7 +19,7 @@ ostream::ostream(write_func *write, flush_func *flush) noexcept
 
 ostream::size_type ostream::write(char c) noexcept
 {
-  return (*m_write)(&c, 1);
+  return (*m_write)(&c, 1U);
 }
 
 ostream::size_type ostream::write(char c, size_type n) noexcept
@@ -179,9 +179,9 @@ int ostream::vprintf(const char *str, va_list args) noexcept
     }
     else if (*str == 'p')
     {
-      if (void *addr = va.getArg<void *>(); addr != nullptr)
+      if (void *p = va.getArg<void *>(); p != nullptr)
       {
-        toBeWritten = toHexString(reinterpret_cast<uintptr_t>(addr), false, true);
+        toBeWritten = toHexString(reinterpret_cast<uintptr_t>(p), false, true);
         argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
       }
       else
@@ -257,15 +257,15 @@ int ostream::printf(const char *str, ...) noexcept
   return retval;
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral<int_t>::value, bool>>
-ostream & ostream::operator<<(int_t value) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+ostream & ostream::operator<<(T value) noexcept
 {
   write(toString(value));
   return *this;
 }
 
-template <typename float_t, std::enable_if_t<std::is_floating_point<float_t>::value, bool>>
-ostream & ostream::operator<<(float_t value) noexcept
+template <typename T, EnableIfT<IsFloatingPointV<T>>>
+ostream & ostream::operator<<(T value) noexcept
 {
   write(toString(value));
   return *this;
@@ -309,9 +309,9 @@ ostream & ostream::operator<<(std::nullptr_t) noexcept
   return *this;
 }
 
-ostream & ostream::operator<<(const void *addr) noexcept
+ostream & ostream::operator<<(const void *p) noexcept
 {
-  write(toHexString(reinterpret_cast<uintptr_t>(addr), false, true));
+  write(toHexString(reinterpret_cast<uintptr_t>(p), false, true));
   return *this;
 }
 
