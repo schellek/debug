@@ -40,7 +40,7 @@ template <typename T>
 using IsContainer = __IsContainer<RemoveConstRefT<T>>;
 
 template <typename T>
-inline constexpr bool IsContainerV = IsContainer<T>::value;
+inline constexpr bool IsContainerV = IsContainer<T>::Value;
 
 template <typename T>
 struct __IsMap : FalseType {};
@@ -55,6 +55,6 @@ template <typename T>
 using IsMap = __IsMap<RemoveConstRefT<T>>;
 
 template <typename T>
-inline constexpr bool IsMapV = IsMap<T>::value;
+inline constexpr bool IsMapV = IsMap<T>::Value;
 
 FMT_END_NAMESPACE

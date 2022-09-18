@@ -4,6 +4,6 @@
 
 FMT_BEGIN_NAMESPACE
 
-inline char StringConvBuffer[50U];
+inline char StringConvBuffer[40U];
 
 FMT_END_NAMESPACE

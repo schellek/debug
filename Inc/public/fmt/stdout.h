@@ -8,9 +8,9 @@ FMT_BEGIN_GLOBAL_NAMESPACE
  * @brief         Writes a string to stdout
  * @param[in]     str: String to be written
  * @param[in]     len: Length of the string
- * @return        fmt_size_type: Number of characters written
+ * @return        FmtSizeType: Number of characters written
  */
-fmt_size_type fmt_write(const char *str, fmt_size_type len);
+FmtSizeType FmtWrite(const char *str, FmtSizeType len);
 
 /**
  * @brief         Prints a formatted string to stdout
@@ -22,7 +22,7 @@ fmt_size_type fmt_write(const char *str, fmt_size_type len);
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_printf(FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(1);
+int FmtPrintf(FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(1);
 
 /**
  * @brief         Stores a formatted string to a specified buffer
@@ -35,7 +35,7 @@ int fmt_printf(FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(1);
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_sprintf(char *buf, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(2);
+int FmtSPrintf(char *buf, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(2);
 
 /**
  * @brief         Stores a formatted string to a specified buffer with a fixed length
@@ -49,35 +49,35 @@ int fmt_sprintf(char *buf, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FU
  *                storage location, for n).
  * @return        int: Number of characters written
  */
-int fmt_snprintf(char *buf, size_t n, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(3);
+int FmtSNPrintf(char *buf, size_t n, FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(3);
 
 /**
  * @brief         Writes a string to stdout followed by an end of line
  * @param[in]     str: String to be written
  * @return        int: Number of characters written
  */
-int fmt_puts(const char *str);
+int FmtPutS(const char *str);
 
 /**
  * @brief         Writes a character to stdout
  * @param[in]     c: Character to be written
  * @return        int: Number of characters written
  */
-int fmt_putchar(int c);
+int FmtPutChar(int c);
 
 /**
  * @brief         Flushes stdout
  * @param[]       None
  * @return        None
  */
-void fmt_flush(void);
+void FmtFlush(void);
 
 /**
- * @brief
- * @param expr
- * @param file
- * @param line
+ * @brief         TBD
+ * @param[in]     expr: Failed expression
+ * @param[in]     file: 
+ * @param[in]     line
  */
-void fmt_assert_failed(const char *expr, const char *file, uint32_t line);
+void FmtAssertFailed(const char *expr, const char *file, uint32_t line);
 
 FMT_END_GLOBAL_NAMESPACE

@@ -8,59 +8,65 @@
 
 FMT_BEGIN_NAMESPACE
 
-class ostream
+class OStream
 {
 public:
-  using size_type = fmt_size_type;
-  using write_func = size_type(const char *, size_type) noexcept;
-  using flush_func = void(void) noexcept;
-  using manip_func = ostream &(ostream &) noexcept;
+  using SizeType  = FmtSizeType;
+  using WriteFunc = SizeType(const char *, SizeType) noexcept;
+  using FlushFunc = void(void) noexcept;
+  using ManipFunc = OStream &(OStream &) noexcept;
+
+  using size_type = SizeType;
 
 private:
-  write_func *const m_write;
-  flush_func *const m_flush;
+  WriteFunc *const m_write;
+  FlushFunc *const m_flush;
 
 public:
-  ostream() = delete;
-  ostream(write_func *write, flush_func *flush = nullptr) noexcept;
+  OStream() = delete;
+  OStream(WriteFunc *write, FlushFunc *flush = nullptr) noexcept;
 
-  size_type write(char c) noexcept;
-  size_type write(char c, size_type n) noexcept;
-  size_type write(const char *str, size_type len) noexcept;
-  size_type write(std::string_view str) noexcept;
+  SizeType write(char c) noexcept;
+  SizeType write(char c, SizeType n) noexcept;
+  SizeType write(const char *str, SizeType len) noexcept;
+  SizeType write(std::string_view str) noexcept;
 
   void flush(void) noexcept;
 
   int vprintf(const char *str, va_list args) noexcept;
   int printf(FMT_PRINTF_FMTSTR const char *str, ...) noexcept FMT_PRINTF_FUNC(2);
 
-  ostream & operator<<(bool value) noexcept;
-  ostream & operator<<(char value) noexcept;
-  ostream & operator<<(char *str) noexcept;
-  ostream & operator<<(const char *str) noexcept;
-  ostream & operator<<(std::string_view str) noexcept;
-  ostream & operator<<(std::nullptr_t) noexcept;
+  OStream & operator<<(bool value) noexcept;
+  OStream & operator<<(char value) noexcept;
+  OStream & operator<<(char *str) noexcept;
+  OStream & operator<<(const char *str) noexcept;
+  OStream & operator<<(std::string_view str) noexcept;
+  OStream & operator<<(std::nullptr_t) noexcept;
 
   template <typename T, EnableIfT<IsIntegralV<T>> = true>
-  ostream & operator<<(T value) noexcept;
+  OStream & operator<<(T value) noexcept;
 
   template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
-  ostream & operator<<(T value) noexcept;
+  OStream & operator<<(T value) noexcept;
 
   template <typename T, EnableIfT<IsPointerV<T>> = true>
-  ostream & operator<<(T value) noexcept;
+  OStream & operator<<(T value) noexcept;
 
   template <typename T, EnableIfT<IsSmartPointerV<T>> = true>
-  ostream & operator<<(T &value) noexcept;
+  OStream & operator<<(T &value) noexcept;
 
-  ostream & operator<<(const void *p) noexcept;
-  ostream & operator<<(manip_func &function) noexcept;
+  OStream & operator<<(const void *p) noexcept;
+  OStream & operator<<(ManipFunc &function) noexcept;
 };
 
-ostream & flush(ostream &stream) noexcept;
-ostream & endl(ostream &stream) noexcept;
+OStream & Flush(OStream &stream) noexcept;
+OStream & Endl(OStream &stream) noexcept;
 
-extern ostream cout;
+using ostream = OStream;
+static inline constexpr OStream::ManipFunc &flush = Flush;
+static inline constexpr OStream::ManipFunc &endl  = Endl;
+
+extern OStream cout;
 
 FMT_END_NAMESPACE
 

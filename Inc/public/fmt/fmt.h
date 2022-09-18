@@ -4,8 +4,8 @@
 #define FMT_ENDL "\n"
 #endif
 
-#define FMT_ABI fmt::v1
-#define FMT_BEGIN_NAMESPACE namespace fmt { inline namespace v1 {
+#define FMT_ABI Fmt::v1
+#define FMT_BEGIN_NAMESPACE namespace Fmt { inline namespace v1 {
 #define FMT_END_NAMESPACE } }
 
 #ifdef __cplusplus
@@ -33,4 +33,4 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef uint16_t fmt_size_type;
+typedef uint16_t FmtSizeType;

@@ -6,8 +6,8 @@
 
 FMT_BEGIN_NAMESPACE
 
-template <typename OStream, typename Iterator>
-void streamElement(OStream &stream, Iterator element) noexcept
+template <typename OStreamT, typename IteratorT>
+void StreamElement(OStreamT &stream, IteratorT element) noexcept
 {
   using T = RemoveCVRefT<decltype(*element)>;
 
@@ -19,20 +19,20 @@ void streamElement(OStream &stream, Iterator element) noexcept
     stream << *element;
 }
 
-template <typename OStream, typename Iterator>
-OStream & streamContainer(OStream &stream, Iterator begin, Iterator end) noexcept
+template <typename OStreamT, typename IteratorT>
+OStreamT & StreamContainer(OStreamT &stream, IteratorT begin, IteratorT end) noexcept
 {
-  Iterator it = begin;
+  IteratorT it = begin;
 
   stream << '[';
 
   if (it != end)
-    streamElement(stream, it++);
+    StreamElement(stream, it++);
 
   for (; it != end; ++it)
   {
     stream << ", ";
-    streamElement(stream, it);
+    StreamElement(stream, it);
   }
 
   stream << ']';
@@ -40,28 +40,28 @@ OStream & streamContainer(OStream &stream, Iterator begin, Iterator end) noexcep
   return stream;
 }
 
-template <typename OStream, typename Iterator>
-OStream & streamMap(OStream &stream, Iterator begin, Iterator end) noexcept
+template <typename OStreamT, typename IteratorT>
+OStreamT & StreamMap(OStreamT &stream, IteratorT begin, IteratorT end) noexcept
 {
-  Iterator it = begin;
+  IteratorT it = begin;
 
   stream << '{';
 
   if (it != end)
   {
     const auto & [key, value] = *(it++);
-    streamElement(stream, &key);
+    StreamElement(stream, &key);
     stream << ": ";
-    streamElement(stream, &value);
+    StreamElement(stream, &value);
   }
 
   for (; it != end; ++it)
   {
     const auto & [key, value] = *it;
     stream << ", ";
-    streamElement(stream, &key);
+    StreamElement(stream, &key);
     stream << ": ";
-    streamElement(stream, &value);
+    StreamElement(stream, &value);
   }
 
   stream << '}';
@@ -69,8 +69,8 @@ OStream & streamMap(OStream &stream, Iterator begin, Iterator end) noexcept
   return stream;
 }
 
-template <typename OStream, size_t idx, typename ...T>
-OStream & streamTuple(OStream &stream, const std::tuple<T...> &tuple) noexcept
+template <typename OStreamT, size_t idx, typename ...T>
+OStreamT & StreamTuple(OStreamT &stream, const std::tuple<T...> &tuple) noexcept
 {
   if constexpr (idx < sizeof...(T))
   {
@@ -79,8 +79,8 @@ OStream & streamTuple(OStream &stream, const std::tuple<T...> &tuple) noexcept
     else
       stream << ", ";
 
-    streamElement(stream, &std::get<idx>(tuple));
-    streamTuple<OStream, idx + 1, T...>(stream, tuple);
+    StreamElement(stream, &std::get<idx>(tuple));
+    StreamTuple<OStreamT, idx + 1, T...>(stream, tuple);
   }
   else
   {
@@ -92,32 +92,32 @@ OStream & streamTuple(OStream &stream, const std::tuple<T...> &tuple) noexcept
 
 FMT_END_NAMESPACE
 
-FMT_ABI::ostream & operator<<(FMT_ABI::ostream &stream, const std::string &str) noexcept
+FMT_ABI::OStream & operator<<(FMT_ABI::OStream &stream, const std::string &str) noexcept
 {
-  stream.write(str.data(), static_cast<FMT_ABI::ostream::size_type>(str.size()));
+  stream.write(str.data(), static_cast<FMT_ABI::OStream::SizeType>(str.size()));
   return stream;
 }
 
-template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsContainerV<T>>>
-OStream & operator<<(OStream &stream, const T &container) noexcept
+template <typename OStreamT, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsContainerV<T>>>
+OStreamT & operator<<(OStreamT &stream, const T &container) noexcept
 {
-  return FMT_ABI::streamContainer(stream, container.cbegin(), container.cend());
+  return FMT_ABI::StreamContainer(stream, container.cbegin(), container.cend());
 }
 
-template <typename OStream, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsMapV<T>>>
-OStream & operator<<(OStream &stream, const T &map) noexcept
+template <typename OStreamT, typename T, FMT_ABI::EnableIfT<FMT_ABI::IsMapV<T>>>
+OStreamT & operator<<(OStreamT &stream, const T &map) noexcept
 {
-  return FMT_ABI::streamMap(stream, map.cbegin(), map.cend());
+  return FMT_ABI::StreamMap(stream, map.cbegin(), map.cend());
 }
 
-template <typename OStream, typename ...T>
-OStream & operator<<(OStream &stream, const std::tuple<T...> &tuple) noexcept
+template <typename OStreamT, typename ...T>
+OStreamT & operator<<(OStreamT &stream, const std::tuple<T...> &tuple) noexcept
 {
-  return FMT_ABI::streamTuple(stream, tuple);
+  return FMT_ABI::StreamTuple(stream, tuple);
 }
 
-template <typename OStream, typename T1, typename T2>
-OStream & operator<<(OStream &stream, const std::pair<T1, T2> &pair) noexcept
+template <typename OStreamT, typename T1, typename T2>
+OStreamT & operator<<(OStreamT &stream, const std::pair<T1, T2> &pair) noexcept
 {
-  return FMT_ABI::streamTuple(stream, std::make_tuple(std::ref(pair.first), std::ref(pair.second)));
+  return FMT_ABI::StreamTuple(stream, std::make_tuple(std::ref(pair.first), std::ref(pair.second)));
 }

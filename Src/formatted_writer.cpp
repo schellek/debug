@@ -1,26 +1,24 @@
 #include "fmt/formatted_writer.hpp"
 
-#define IS_FLAG_SET(BITFIELD, FLAG)  (((BITFIELD) & (FLAG)) != 0)
-
 FMT_BEGIN_NAMESPACE
 
-FormattedWriter::FormattedWriter(ostream &stream) noexcept
-  : ostream{stream}
+FormattedWriter::FormattedWriter(OStream &stream) noexcept
+  : OStream{stream}
 {
 }
 
-FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWritten,
-                                                       const FormatOptions options,
-                                                       const uint8_t argFlags) noexcept
+FormattedWriter::SizeType FormattedWriter::operator()(std::string_view toBeWritten,
+                                                      const FormatOptions options,
+                                                      const ArgFlag argFlags) noexcept
 {
-  size_type written = 0U;
+  SizeType written = 0U;
   int fieldWidth = options.fieldWidth;
 
-  const bool isIntegral = IS_FLAG_SET(argFlags, ArgFlag::Integral);
-  const bool isArithmetic = IS_FLAG_SET(argFlags, ArgFlag::Integral | ArgFlag::FloatingPoint);
-  const bool isString = IS_FLAG_SET(argFlags, ArgFlag::String);
-  const bool isSigned = IS_FLAG_SET(argFlags, ArgFlag::Signed);
-  const bool isHexPrefixed = options.hashFlag && IS_FLAG_SET(argFlags, ArgFlag::Hexadecimal);
+  const bool isIntegral = IsFlagSet(argFlags, ArgFlag::Integral);
+  const bool isArithmetic = IsFlagSet(argFlags, ArgFlag::Integral | ArgFlag::FloatingPoint);
+  const bool isString = IsFlagSet(argFlags, ArgFlag::String);
+  const bool isSigned = IsFlagSet(argFlags, ArgFlag::Signed);
+  const bool isHexPrefixed = options.hashFlag && IsFlagSet(argFlags, ArgFlag::Hexadecimal);
   const bool isNegative = isSigned && (toBeWritten.at(0) == '-');
   char signChar = '\0';
   std::string_view prefix;
@@ -41,16 +39,16 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
     fieldWidth -= 2;
   }
 
-  size_type toBeWrittenSize = static_cast<size_type>(toBeWritten.size());
+  SizeType toBeWrittenSize = static_cast<SizeType>(toBeWritten.size());
 
   if (isString && (options.precision != FormatOptions::NOT_SPECIFIED) && (options.precision < toBeWrittenSize))
   {
-    size_type toRemove = static_cast<size_type>(toBeWrittenSize - options.precision);
+    SizeType toRemove = static_cast<SizeType>(toBeWrittenSize - options.precision);
     toBeWritten.remove_suffix(toRemove);
     toBeWrittenSize -= toRemove;
   }
 
-  size_type subFieldWidth;
+  SizeType subFieldWidth;
 
   if (isIntegral && (options.precision > toBeWrittenSize))
     subFieldWidth = options.precision;
@@ -71,12 +69,12 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (subFieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(subFieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<SizeType>(subFieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
 
     if (fieldWidth > written)
-      written += write(' ', static_cast<size_type>(fieldWidth - written));
+      written += write(' ', static_cast<SizeType>(fieldWidth - written));
   }
   else if (isArithmetic && (subFieldWidth == toBeWrittenSize) && options.zeroFlag)
   {
@@ -87,14 +85,14 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (fieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(fieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<SizeType>(fieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
   }
   else
   {
     if (fieldWidth > subFieldWidth)
-      written += write(' ', static_cast<size_type>(fieldWidth - subFieldWidth));
+      written += write(' ', static_cast<SizeType>(fieldWidth - subFieldWidth));
 
     if (signChar != '\0')
       written += write(signChar);
@@ -103,7 +101,7 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (subFieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(subFieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<SizeType>(subFieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
   }

@@ -9,11 +9,11 @@
 #include "defines.h"
 #include "fmt/string_conv.hpp"
 
-fmt::ostream fmt::cout
+Fmt::OStream Fmt::cout
 {
-  [](const char *str, fmt::ostream::size_type len) noexcept -> fmt::ostream::size_type
+  [](const char *str, Fmt::OStream::SizeType len) noexcept -> Fmt::OStream::SizeType
   {
-    return static_cast<fmt::ostream::size_type>(fwrite(str, 1U, len, stdout));
+    return static_cast<Fmt::OStream::SizeType>(fwrite(str, 1U, len, stdout));
   },
   [](void) noexcept -> void
   {
@@ -23,7 +23,7 @@ fmt::ostream fmt::cout
 
 int main()
 {
-  uint8_t num2 = 192;
+  [[maybe_unused]] uint8_t num2 = 192;
   std::array<int, 5> array = {100, 200, 300, 400, 500};
   std::map<int, std::string_view> map;
   std::array<int, 5> nums;
@@ -34,16 +34,16 @@ int main()
   map.emplace(15, "Fifteen");
   map.emplace(5, "Five");
 
-  fmt::cout << "Hello, this is an example!" FMT_ENDL;
+  Fmt::cout << "Hello, this is an example!" FMT_ENDL;
 
-  fmt_printf("%-7s", "array:");
-  fmt::cout << array << fmt::endl;
-  fmt_printf("%-*s", 7, "map:");
-  fmt::cout << map << fmt::endl;
-  fmt_printf("%*s", -7, "tuple:");
-  fmt::cout << std::make_tuple("number + char", 123456789, 'x') << fmt::endl;
-  fmt_printf("%*s", -7, "pair:");
-  fmt::cout << std::make_pair("array", std::ref(nums)) << fmt::endl;
+  FmtPrintf("%-7s", "array:");
+  Fmt::cout << array << Fmt::endl;
+  FmtPrintf("%-*s", 7, "map:");
+  Fmt::cout << map << Fmt::endl;
+  FmtPrintf("%*s", -7, "tuple:");
+  Fmt::cout << std::make_tuple("number + char", 123456789, 'x') << Fmt::endl;
+  FmtPrintf("%*s", -7, "pair:");
+  Fmt::cout << std::make_pair("array", std::ref(nums)) << Fmt::endl;
 
   PRINTF("printf should also work just %s :%c %" PRIu8 " %p" FMT_ENDL, "fine", ')', num2, nullptr);
 

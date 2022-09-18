@@ -1,31 +1,22 @@
 # fmt
 
 This repository contains a custom implementation of `stdio` and `ostream` without the use of heap-allocations.
-These debug files are mainly implemented for microcontrollers, however they are platform independent.
+Tis library is mainly dedicated to microcontrollers, however they are platform independent.
 
 [![CMake Build](https://github.com/schellek/fmt/actions/workflows/cmake.yml/badge.svg)](https://github.com/schellek/fmt/actions/workflows/cmake.yml)
 
 For example it can be used as follows:
-#### CMakeFiles.txt
-```cmake
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(-DDEBUG)
-  add_subdirectory(path/to/fmt)
-endif()
-```
-
 #### cout.cpp
 ```c++
 #include <cstdio>
 
 #include "fmt/ostream.hpp"
 
-
-fmt::ostream fmt::cout
+Fmt::OStream Fmt::cout
 {
-  [](const char *str, fmt::ostream::size_type len) noexcept -> fmt::ostream::size_type
+  [](const char *str, Fmt::OStream::SizeType len) noexcept -> Fmt::OStream::SizeType
   {
-    return static_cast<fmt::ostream::size_type>(fwrite(str, 1U, len, stdout));
+    return static_cast<Fmt::OStream::SizeType>(fwrite(str, 1U, len, stdout));
   },
   [](void) noexcept -> void
   {
@@ -39,9 +30,9 @@ fmt::ostream fmt::cout
 #include "fmt/stdout.h"
 
 #ifdef DEBUG
-#define PRINTF(...)       fmt_printf(__VA_ARGS__)
-#define LOG(STR)          fmt_write(STR, sizeof(STR) - 1U)
-#define ASSERT(EXPR)      (EXPR) ? (void)0 : fmt_assert_failed(#EXPR, __FILE__, __LINE__)
+#define PRINTF(...)       FmtPrintf(__VA_ARGS__)
+#define LOG(STR)          FmtWrite(STR, sizeof(STR) - 1U)
+#define ASSERT(EXPR)      (EXPR) ? (void)0 : FmtAssertFailed(#EXPR, __FILE__, __LINE__)
 
 #else
 #define PRINTF(...)
@@ -56,7 +47,7 @@ static int array[ARRAY_LEN];
 void HelloWorld(void)
 {
   /// Hello World is only printed, when DEBUG is defined
-  /// Neither "Hello %s\r\n" as well as "World" are also not stored in their corresponding section
+  /// Neither "Hello %s" as well as "World" are also not stored in their corresponding section
   /// when DEBUG is not defined
   PRINTF("Hello %s" FMT_ENDL, "World");
   LOG("Hello again!" FMT_ENDL);

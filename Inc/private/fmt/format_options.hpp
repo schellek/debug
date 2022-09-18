@@ -8,17 +8,17 @@
 
 FMT_BEGIN_NAMESPACE
 
-enum class trait : uint8_t
+enum class Trait : unsigned int
 {
-  regular = 0U,
-  asChar,
-  asShort,
-  asLong,
-  asLongLong,
-  asIntmax_t,
-  asSize_t,
-  asPtrdiff_t,
-  asInvalid
+  Regular = 0U,
+  AsChar,
+  AsShort,
+  AsLong,
+  AsLongLong,
+  AsIntmax_t,
+  ASSizeT,
+  AsPtrdiff_t,
+  AsInvalid
 };
 
 struct FormatOptions
@@ -35,8 +35,8 @@ struct FormatOptions
   int precision;
 };
 
-const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-const char * parseArgTraitment(const char *str, trait &argTraitment) noexcept;
-bool formattingIsRequired(const FormatOptions &formatOptions) noexcept;
+const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
+const char * ParseArgTraitment(const char *str, Trait &argTraitment) noexcept;
+bool FormattingIsRequired(const FormatOptions &formatOptions) noexcept;
 
 FMT_END_NAMESPACE

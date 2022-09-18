@@ -1,118 +1,104 @@
 #pragma once
 
-#include <limits>
-
+#include <climits>
+#include <cfloat>
 #include "fmt/fmt.h"
 #include "fmt/type_traits.hpp"
 
 FMT_BEGIN_NAMESPACE
 
-enum FloatingPointStandard
-{
-  Unknown = -1,
-  Ieee754,
-  Iec559 = Ieee754,
-  Bfloat
-};
-
-template <FloatingPointStandard, size_t>
-struct FloatingPointLayout;
-
-template <>
-struct FloatingPointLayout<Ieee754, 2U>
+template <unsigned int M = 0U, unsigned int B = 0U>
+struct __FloatingPointLayout
 {
   enum : unsigned int
   {
-    MANTISSA_WIDTH        = 10U,
-    BIASED_EXPONENT_WIDTH = 5U,
-    SIGN_WIDTH            = 1U
+    MANTISSA_WIDTH        = M,
+    BIASED_EXPONENT_WIDTH = B,
+
+    REQUIRED_WIDTH        = M + B + 1
   };
+
+  static constexpr bool isValid(void) noexcept { return (M > 0U) && (B > 0U); }
 };
 
+template <typename T>
+struct FloatingPointLayout : __FloatingPointLayout<> {};
+
+#ifdef FMT_FLOAT16_SUPPORT
 template <>
-struct FloatingPointLayout<Bfloat, 2U>
-{
-  enum : unsigned int
-  {
-    MANTISSA_WIDTH        = 7U,
-    BIASED_EXPONENT_WIDTH = 8U,
-    SIGN_WIDTH            = 1U
-  };
-};
+struct FloatingPointLayout<FmtFloat16> : __FloatingPointLayout<10U, 5U> {};
+#endif // FMT_FLOAT16_SUPPORT
+
+#ifdef FMT_BFLOAT16_SUPPORT
+template <>
+struct FloatingPointLayout<FmtBFloat16> : __FloatingPointLayout<7U, 8U> {};
+#endif // FMT_BFLOAT16_SUPPORT
 
 template <>
-struct FloatingPointLayout<Ieee754, 4U>
-{
-  enum : unsigned int
-  {
-    MANTISSA_WIDTH        = 23U,
-    BIASED_EXPONENT_WIDTH = 8U,
-    SIGN_WIDTH            = 1U
-  };
-};
+struct FloatingPointLayout<float> : __FloatingPointLayout<FLT_MANT_DIG, 1> {};
 
 template <>
-struct FloatingPointLayout<Ieee754, 8U>
-{
-  enum : unsigned int
-  {
-    MANTISSA_WIDTH        = 52U,
-    BIASED_EXPONENT_WIDTH = 11U,
-    SIGN_WIDTH            = 1U
-  };
-};
+struct FloatingPointLayout<double> : __FloatingPointLayout<DBL_MANT_DIG, 1> {};
 
 template <>
-struct FloatingPointLayout<Ieee754, 16U>
+struct FloatingPointLayout<long double> : __FloatingPointLayout<LDBL_MANT_DIG, 1> {};
+
+#ifdef FMT_FLOAT80_SUPPORT
+template <>
+struct FloatingPointLayout<FmtFloat80> : __FloatingPointLayout<64U, 15U> {};
+#endif // FMT_FLOAT80_SUPPORT
+
+#ifdef FMT_FLOAT128_SUPPORT
+template <>
+struct FloatingPointLayout<FmtFloat128> : __FloatingPointLayout<112U, 15U> {};
+#endif // FMT_FLOAT128_SUPPORT
+
+template <typename T, typename LayoutT, unsigned int P>
+struct __FloatingPointBitfield
 {
-  enum : unsigned int
-  {
-    MANTISSA_WIDTH        = 112U,
-    BIASED_EXPONENT_WIDTH = 15U,
-    SIGN_WIDTH            = 1U
-  };
+  T mantissa       : LayoutT::MANTISSA_WIDTH;
+  T biasedExponent : LayoutT::BIASED_EXPONENT_WIDTH;
+  T sign           : 1U;
+  T padding        : P;
 };
+
+template <typename T, typename LayoutT>
+struct __FloatingPointBitfield<T, LayoutT, 0U>
+{
+  T mantissa       : LayoutT::MANTISSA_WIDTH;
+  T biasedExponent : LayoutT::BIASED_EXPONENT_WIDTH;
+  T sign           : 1U;
+};
+
+template <typename T, typename LayoutT>
+using FloatingPointBitfield = __FloatingPointBitfield<T, LayoutT, sizeof(T) * 8U - LayoutT::REQUIRED_WIDTH>;
 
 template <typename T>
 union FloatingPoint
 {
-private:
-  static constexpr FloatingPointStandard _standard(void) noexcept;
-
 public:
-  using float_t  = T;
-  using layout_t = FloatingPointLayout<_standard(), sizeof(float_t)>;
-  using uint_t   = UnsignedIntT<sizeof(float_t)>;
-  using int_t    = SignedIntT<sizeof(float_t)>;
-
-  enum : unsigned int
-  {
-    MANTISSA_WIDTH        = layout_t::MANTISSA_WIDTH,
-    BIASED_EXPONENT_WIDTH = layout_t::BIASED_EXPONENT_WIDTH,
-    SIGN_WIDTH            = layout_t::SIGN_WIDTH
-  };
-
-  float_t f;
-  uint_t w;
-  struct
-  {
-    uint_t mantissa       : MANTISSA_WIDTH;
-    uint_t biasedExponent : BIASED_EXPONENT_WIDTH;
-    uint_t sign           : SIGN_WIDTH;
-  } b;
+  using FloatT  = T;
+  using UIntT   = UnsignedIntT<sizeof(FloatT)>;
+  using IntT    = SignedIntT<sizeof(FloatT)>;
 
 private:
-  static constexpr uint_t _bias(void) noexcept;
-  static constexpr uint_t _biasedExponentMax(void) noexcept;
-  static constexpr uint_t biasedExponentMax = _biasedExponentMax();
+  using LayoutT = FloatingPointLayout<T>;
+  static_assert(LayoutT::isValid());
 
 public:
-  constexpr FloatingPoint(float_t f) noexcept;
-  constexpr FloatingPoint(uint_t w) noexcept;
+  FloatT f;
+  alignas(alignof(T)) UIntT w;
+  alignas(alignof(T)) FloatingPointBitfield<UIntT, LayoutT> b;
 
-  static constexpr uint_t bias = _bias();
+private:
+  static constexpr UIntT bias(void) noexcept;
+  static constexpr UIntT biasedExponentMax(void) noexcept;
 
-  constexpr int_t exponent(void) noexcept;
+public:
+  constexpr FloatingPoint(FloatT f) noexcept;
+  constexpr FloatingPoint(UIntT w) noexcept;
+
+  constexpr IntT exponent(void) noexcept;
 
   constexpr bool isZero(void) noexcept;
   constexpr bool isInf(void) noexcept;
