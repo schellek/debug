@@ -21,8 +21,13 @@ using EnableIfT = typename EnableIf<B>::Type;
 template <typename T, T V>
 struct IntegralConstant
 {
-  using value_type = T;
-  static constexpr const value_type Value = V;
+  using ValueT = T;
+  using Type = IntegralConstant;
+
+  static constexpr const ValueT Value = V;
+
+  constexpr operator ValueT(void) const noexcept   { return Value; }
+  constexpr ValueT operator()(void) const noexcept { return Value; }
 };
 
 template <bool B>
@@ -291,11 +296,6 @@ struct __IsFloatingPoint : FalseType {};
 template <>
 struct __IsFloatingPoint<FmtFloat16> : TrueType {};
 #endif // FMT_FLOAT16_SUPPORT
-
-#ifdef FMT_BFLOAT16_SUPPORT
-template <>
-struct __IsFloatingPoint<FmtBFloat16> : TrueType {};
-#endif // FMT_BFLOAT16_SUPPORT
 
 template <>
 struct __IsFloatingPoint<float> : TrueType {};

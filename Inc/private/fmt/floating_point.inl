@@ -17,39 +17,27 @@ constexpr FloatingPoint<T>::FloatingPoint(UIntT w) noexcept
 }
 
 template <typename T>
-constexpr typename FloatingPoint<T>::UIntT FloatingPoint<T>::bias(void) noexcept
+inline typename FloatingPoint<T>::IntT FloatingPoint<T>::exponent(void) noexcept
 {
-  return static_cast<UIntT>((1U << (LayoutT::BIASED_EXPONENT_WIDTH - 1U)) - 1U);
+  return static_cast<IntT>(b.biasedExponent - bias);
 }
 
 template <typename T>
-constexpr typename FloatingPoint<T>::UIntT FloatingPoint<T>::biasedExponentMax(void) noexcept
+inline bool FloatingPoint<T>::isNan(void) noexcept
 {
-  return static_cast<UIntT>((1U << LayoutT::BIASED_EXPONENT_WIDTH) - 1U);
+  return LayoutT::hasNan() ? ((b.biasedExponent == biasedExponentMax) && (b.mantissa > 0U)) : false;
 }
 
 template <typename T>
-constexpr typename FloatingPoint<T>::IntT FloatingPoint<T>::exponent(void) noexcept
+inline bool FloatingPoint<T>::isInf(void) noexcept
 {
-  return static_cast<IntT>(b.biasedExponent - IntegralConstant<UIntT, bias()>::Value);
+  return LayoutT::hasInf() ? ((b.biasedExponent == biasedExponentMax) && (b.mantissa == 0U)) : false;
 }
 
 template <typename T>
-constexpr bool FloatingPoint<T>::isNan(void) noexcept
+inline bool FloatingPoint<T>::isZero(void) noexcept
 {
-  return (b.biasedExponent == IntegralConstant<UIntT, biasedExponentMax()>::Value) && (b.mantissa != 0);
-}
-
-template <typename T>
-constexpr bool FloatingPoint<T>::isInf(void) noexcept
-{
-  return (b.biasedExponent == IntegralConstant<UIntT, biasedExponentMax()>::Value) && (b.mantissa == 0);
-}
-
-template <typename T>
-constexpr bool FloatingPoint<T>::isZero(void) noexcept
-{
-  return (b.biasedExponent == 0) && (b.mantissa == 0);
+  return (b.biasedExponent == 0U) && (b.mantissa == 0U);
 }
 
 FMT_END_NAMESPACE
