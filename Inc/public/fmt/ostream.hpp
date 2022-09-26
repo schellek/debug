@@ -12,19 +12,49 @@ class OStream
 {
 public:
   using SizeType  = FmtSizeType;
-  using WriteFunc = SizeType(const char *, SizeType) noexcept;
-  using FlushFunc = void(void) noexcept;
+  using StaticWriteFunc = SizeType(const char *, SizeType) noexcept;
+  using MemberWriteFunc = SizeType(void *, const char *, SizeType) noexcept;
+  using StaticFlushFunc = void(void) noexcept;
+  using MemberFlushFunc = void(void *) noexcept;
   using ManipFunc = OStream &(OStream &) noexcept;
+
+  struct WriteFunc
+  {
+    union
+    {
+      StaticWriteFunc *staticFunc;
+      MemberWriteFunc *memberFunc;
+    } internal;
+    SizeType(OStream::*external)(const char *, SizeType) noexcept;
+
+    WriteFunc(StaticWriteFunc *f) noexcept;
+    WriteFunc(MemberWriteFunc *f) noexcept;
+  };
+
+  struct FlushFunc
+  {
+    union
+    {
+      StaticFlushFunc *staticFunc;
+      MemberFlushFunc *memberFunc;
+    } internal;
+    void(OStream::*external)(void) noexcept;
+
+    FlushFunc(StaticFlushFunc *f) noexcept;
+    FlushFunc(MemberFlushFunc *f) noexcept;
+  };
 
   using size_type = SizeType;
 
 private:
-  WriteFunc *const m_write;
-  FlushFunc *const m_flush;
+  void *const m_obj;
+  const WriteFunc m_write;
+  const FlushFunc m_flush;
 
 public:
   OStream() = delete;
-  OStream(WriteFunc *write, FlushFunc *flush = nullptr) noexcept;
+  OStream(StaticWriteFunc *write, StaticFlushFunc *flush = nullptr) noexcept;
+  OStream(void *obj, MemberWriteFunc *write, MemberFlushFunc *flush = nullptr) noexcept;
 
   SizeType write(char c) noexcept;
   SizeType write(char c, SizeType n) noexcept;
@@ -57,6 +87,17 @@ public:
 
   OStream & operator<<(const void *p) noexcept;
   OStream & operator<<(ManipFunc &function) noexcept;
+
+private:
+  SizeType _write(const char *str, SizeType len) noexcept;
+  SizeType staticWrite(const char *str, SizeType len) noexcept;
+  SizeType memberWrite(const char *str, SizeType len) noexcept;
+  SizeType dummyWrite(const char *str, SizeType len) noexcept;
+
+  void _flush(void) noexcept;
+  void staticFlush(void) noexcept;
+  void memberFlush(void) noexcept;
+  void dummyFlush(void) noexcept;
 };
 
 OStream & Flush(OStream &stream) noexcept;

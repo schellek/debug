@@ -12,14 +12,43 @@ using namespace std::string_view_literals;
 using SSizeT = MakeSignedT<size_t>;
 using UPtrDiffT = MakeUnsignedT<ptrdiff_t>;
 
-OStream::OStream(WriteFunc *write, FlushFunc *flush) noexcept
-  : m_write{write}, m_flush{flush}
+OStream::WriteFunc::WriteFunc(StaticWriteFunc *f) noexcept
+{
+  internal.staticFunc = f;
+  external = (f != nullptr) ? &OStream::staticWrite : &OStream::dummyWrite;
+}
+
+OStream::WriteFunc::WriteFunc(MemberWriteFunc *f) noexcept
+{
+  internal.memberFunc = f;
+  external = (f != nullptr) ? &OStream::memberWrite : &OStream::dummyWrite;
+}
+
+OStream::FlushFunc::FlushFunc(StaticFlushFunc *f) noexcept
+{
+  internal.staticFunc = f;
+  external = (f != nullptr) ? &OStream::staticFlush : &OStream::dummyFlush;
+}
+
+OStream::FlushFunc::FlushFunc(MemberFlushFunc *f) noexcept
+{
+  internal.memberFunc = f;
+  external = (f != nullptr) ? &OStream::memberFlush : &OStream::dummyFlush;
+}
+
+OStream::OStream(StaticWriteFunc *write, StaticFlushFunc *flush) noexcept
+  : m_obj{nullptr}, m_write{write}, m_flush{flush}
+{
+}
+
+OStream::OStream(void *obj, MemberWriteFunc *write, MemberFlushFunc *flush) noexcept
+  : m_obj{obj}, m_write{write}, m_flush{flush}
 {
 }
 
 OStream::SizeType OStream::write(char c) noexcept
 {
-  return (*m_write)(&c, 1U);
+  return _write(&c, 1U);
 }
 
 OStream::SizeType OStream::write(char c, SizeType n) noexcept
@@ -31,27 +60,26 @@ OStream::SizeType OStream::write(char c, SizeType n) noexcept
   std::fill_n(toWrite, (n < WRITE_CHUNK_SIZE) ? n : WRITE_CHUNK_SIZE, c);
 
   for (; n > WRITE_CHUNK_SIZE; n -= WRITE_CHUNK_SIZE)
-    written += (*m_write)(toWrite, WRITE_CHUNK_SIZE);
+    written += _write(toWrite, WRITE_CHUNK_SIZE);
 
-  written += (*m_write)(toWrite, n);
+  written += _write(toWrite, n);
 
   return written;
 }
 
 OStream::SizeType OStream::write(const char *str, SizeType len) noexcept
 {
-  return ((str != nullptr) && (len > 0U)) ? (*m_write)(str, len) : SizeType{0};
+  return ((str != nullptr) && (len > 0U)) ? _write(str, len) : SizeType{0};
 }
 
 OStream::SizeType OStream::write(std::string_view str) noexcept
 {
-  return (!str.empty()) ? (*m_write)(str.data(), static_cast<SizeType>(str.size())) : SizeType{0};
+  return (!str.empty()) ?_write(str.data(), static_cast<SizeType>(str.size())) : SizeType{0};
 }
 
 void OStream::flush(void) noexcept
 {
-  if (m_flush != nullptr)
-    (*m_flush)();
+  _flush();
 }
 
 int OStream::vprintf(const char *str, va_list args) noexcept
@@ -318,6 +346,48 @@ OStream & OStream::operator<<(const void *p) noexcept
 OStream & OStream::operator<<(ManipFunc &function) noexcept
 {
   return function(*this);
+}
+
+inline OStream::SizeType OStream::_write(const char *str, SizeType len) noexcept
+{
+  return (this->*m_write.external)(str, len);
+}
+
+OStream::SizeType OStream::staticWrite(const char *str, SizeType len) noexcept
+{
+  return (*m_write.internal.staticFunc)(str, len);
+}
+
+OStream::SizeType OStream::memberWrite(const char *str, SizeType len) noexcept
+{
+  return (*m_write.internal.memberFunc)(m_obj, str, len);
+}
+
+OStream::SizeType OStream::dummyWrite(const char *str, SizeType len) noexcept
+{
+  static_cast<void>(str);
+  static_cast<void>(len);
+  return 0U;
+}
+
+inline void OStream::_flush(void) noexcept
+{
+  (this->*m_flush.external)();
+}
+
+void OStream::staticFlush(void) noexcept
+{
+  (*m_flush.internal.staticFunc)();
+}
+
+void OStream::memberFlush(void) noexcept
+{
+  (m_flush.internal.memberFunc)(m_obj);
+}
+
+void OStream::dummyFlush(void) noexcept
+{
+  /* Do nothing */;
 }
 
 OStream & Flush(OStream &stream) noexcept
