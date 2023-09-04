@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_FORMATTED_WRITER_HPP
+#define FMT_FORMATTED_WRITER_HPP
 
 #include "fmt/fmt.h"
 #include "fmt/ostream.hpp"
@@ -10,39 +11,41 @@ using ArgFlagBaseT = unsigned int;
 
 enum class ArgFlag : ArgFlagBaseT
 {
-  None          = 0U,
+  None          = 0u,
 
-  Integral      = 1U << 0U,
-  FloatingPoint = 1U << 1U,
+  Integral      = 1u << 0u,
+  FloatingPoint = 1u << 1u,
 
-  String        = 1U << 2U,
+  String        = 1u << 2u,
 
-  Signed        = 1U << 3U,
+  Signed        = 1u << 3u,
 
-  Decimal       = 1U << 4U,
-  Octal         = 1U << 5U,
-  Hexadecimal   = 1U << 6U
+  Decimal       = 1u << 4u,
+  Octal         = 1u << 5u,
+  Hexadecimal   = 1u << 6u
 };
 
-static inline constexpr ArgFlag operator|(ArgFlag lhs, ArgFlag rhs) noexcept
+static inline constexpr ArgFlag operator|(ArgFlag lhs, ArgFlag rhs)
 {
   return ArgFlag{static_cast<ArgFlagBaseT>(lhs) | static_cast<ArgFlagBaseT>(rhs)};
 }
 
-static inline constexpr ArgFlag operator&(ArgFlag lhs, ArgFlag rhs) noexcept
+static inline constexpr ArgFlag operator&(ArgFlag lhs, ArgFlag rhs)
 {
   return ArgFlag{static_cast<ArgFlagBaseT>(lhs) & static_cast<ArgFlagBaseT>(rhs)};
 }
 
-static inline constexpr bool IsFlagSet(ArgFlag flags, ArgFlag flag) noexcept
+static inline constexpr bool IsFlagSet(ArgFlag flags, ArgFlag flag)
 {
   return (flags & flag) != ArgFlag::None;
 }
 
 struct FormattedWriter : public OStream
 {
-  FormattedWriter(OStream &stream) noexcept;
-  SizeType operator()(std::string_view toBeWritten, const FormatOptions options, const ArgFlag argFlags) noexcept;
+  FormattedWriter(OStream &stream);
+  tSize operator()(std::string_view toBeWritten, const FormatOptions options, const ArgFlag argFlags);
 };
 
 FMT_END_NAMESPACE
+
+#endif /* FMT_FORMATTED_WRITER_HPP */

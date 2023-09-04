@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_STRING_CONV_HPP
+#define FMT_STRING_CONV_HPP
 
 #include <string_view>
 
@@ -12,7 +13,7 @@ FMT_BEGIN_NAMESPACE
  * @param[in]     value: Value, that is to be converted
  * @return        std::string_view
  */
-std::string_view ToString(bool value) noexcept;
+std::string_view ToString(bool value);
 
 /**
  * @brief         Converts an integral value to a decimal string representation
@@ -22,7 +23,7 @@ std::string_view ToString(bool value) noexcept;
  * @return        std::string_view
  */
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
-std::string_view ToString(T value) noexcept;
+std::string_view ToString(T value);
 
 /**
  * @brief         Converts a floating point value to a decimal string representation
@@ -32,7 +33,7 @@ std::string_view ToString(T value) noexcept;
  * @return        std::string_view
  */
 template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
-std::string_view ToString(T value) noexcept;
+std::string_view ToString(T value);
 
 /**
  * @brief         Converts an integral value to a hexadecimal string representation
@@ -44,7 +45,7 @@ std::string_view ToString(T value) noexcept;
  * @return        std::string_view
  */
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
-std::string_view ToHexString(T value, bool uppercase = false, bool prefix = false) noexcept;
+std::string_view ToHexString(T value, bool uppercase = false, bool prefix = false);
 
 /**
  * @brief         Converts an integral value to a octal string representation
@@ -55,6 +56,8 @@ std::string_view ToHexString(T value, bool uppercase = false, bool prefix = fals
  * @return        std::string_view
  */
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
-std::string_view ToOctString(T value, bool prefix = false) noexcept;
+std::string_view ToOctString(T value, bool prefix = false);
 
 FMT_END_NAMESPACE
+
+#endif /* FMT_STRING_CONV_HPP */

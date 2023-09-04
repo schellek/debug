@@ -9,53 +9,53 @@
 FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
-using SSizeT = MakeSignedT<size_t>;
-using UPtrDiffT = MakeUnsignedT<ptrdiff_t>;
+using tSSize = MakeSignedT<size_t>;
+using tUPtrDiff = MakeUnsignedT<ptrdiff_t>;
 
-OStream::WriteFunc::WriteFunc(StaticWriteFunc *f) noexcept
+OStream::tWrite::tWrite(tWrite::StaticFunc *f)
 {
-  internal.staticFunc = f;
+  staticFunc = f;
   external = (f != nullptr) ? &OStream::staticWrite : &OStream::dummyWrite;
 }
 
-OStream::WriteFunc::WriteFunc(MemberWriteFunc *f) noexcept
+OStream::tWrite::tWrite(tWrite::MemberFunc *f)
 {
-  internal.memberFunc = f;
+  memberFunc = f;
   external = (f != nullptr) ? &OStream::memberWrite : &OStream::dummyWrite;
 }
 
-OStream::FlushFunc::FlushFunc(StaticFlushFunc *f) noexcept
+OStream::tFlush::tFlush(tFlush::StaticFunc *f)
 {
-  internal.staticFunc = f;
+  staticFunc = f;
   external = (f != nullptr) ? &OStream::staticFlush : &OStream::dummyFlush;
 }
 
-OStream::FlushFunc::FlushFunc(MemberFlushFunc *f) noexcept
+OStream::tFlush::tFlush(tFlush::MemberFunc *f)
 {
-  internal.memberFunc = f;
+  memberFunc = f;
   external = (f != nullptr) ? &OStream::memberFlush : &OStream::dummyFlush;
 }
 
-OStream::OStream(StaticWriteFunc *write, StaticFlushFunc *flush) noexcept
-  : m_obj{nullptr}, m_write{write}, m_flush{flush}
+OStream::OStream(tWrite::StaticFunc *write, tFlush::StaticFunc *flush)
+  : obj_{nullptr}, write_{write}, flush_{flush}
 {
 }
 
-OStream::OStream(void *obj, MemberWriteFunc *write, MemberFlushFunc *flush) noexcept
-  : m_obj{obj}, m_write{write}, m_flush{flush}
+OStream::OStream(void *obj, tWrite::MemberFunc *write, tFlush::MemberFunc *flush)
+  : obj_{obj}, write_{write}, flush_{flush}
 {
 }
 
-OStream::SizeType OStream::write(char c) noexcept
+OStream::tSize OStream::write(char c)
 {
-  return _write(&c, 1U);
+  return _write(&c, 1u);
 }
 
-OStream::SizeType OStream::write(char c, SizeType n) noexcept
+OStream::tSize OStream::write(char c, tSize n)
 {
-  constexpr SizeType WRITE_CHUNK_SIZE = 20U;
+  constexpr tSize WRITE_CHUNK_SIZE = 20u;
   char toWrite[WRITE_CHUNK_SIZE];
-  SizeType written = 0U;
+  tSize written = 0u;
 
   std::fill_n(toWrite, (n < WRITE_CHUNK_SIZE) ? n : WRITE_CHUNK_SIZE, c);
 
@@ -67,22 +67,22 @@ OStream::SizeType OStream::write(char c, SizeType n) noexcept
   return written;
 }
 
-OStream::SizeType OStream::write(const char *str, SizeType len) noexcept
+OStream::tSize OStream::write(const char *str, tSize len)
 {
-  return ((str != nullptr) && (len > 0U)) ? _write(str, len) : SizeType{0};
+  return ((str != nullptr) && (len > 0u)) ? _write(str, len) : tSize{0};
 }
 
-OStream::SizeType OStream::write(std::string_view str) noexcept
+OStream::tSize OStream::write(std::string_view str)
 {
-  return (!str.empty()) ?_write(str.data(), static_cast<SizeType>(str.size())) : SizeType{0};
+  return (!str.empty()) ?_write(str.data(), static_cast<tSize>(str.size())) : tSize{0};
 }
 
-void OStream::flush(void) noexcept
+void OStream::flush(void)
 {
   _flush();
 }
 
-int OStream::vprintf(const char *str, va_list args) noexcept
+int OStream::vprintf(const char *str, va_list args)
 {
   int written = 0;
 
@@ -128,12 +128,12 @@ int OStream::vprintf(const char *str, va_list args) noexcept
         toBeWritten = ToString(va.getArg<unsigned long int>());
       else if (argTraitment == Trait::AsLongLong)
         toBeWritten = ToString(va.getArg<unsigned long long int>());
-      else if (argTraitment == Trait::AsIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         toBeWritten = ToString(va.getArg<uintmax_t>());
-      else if (argTraitment == Trait::ASSizeT)
+      else if (argTraitment == Trait::AsSizeT)
         toBeWritten = ToString(va.getArg<size_t>());
-      else if (argTraitment == Trait::AsPtrdiff_t)
-        toBeWritten = ToString(va.getArg<UPtrDiffT>());
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToString(va.getArg<tUPtrDiff>());
 
       argFlags = ArgFlag::Integral | ArgFlag::Decimal;
     }
@@ -149,11 +149,11 @@ int OStream::vprintf(const char *str, va_list args) noexcept
         toBeWritten = ToString(va.getArg<long int>());
       else if (argTraitment == Trait::AsLongLong)
         toBeWritten = ToString(va.getArg<long long int>());
-      else if (argTraitment == Trait::AsIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         toBeWritten = ToString(va.getArg<intmax_t>());
-      else if (argTraitment == Trait::ASSizeT)
-        toBeWritten = ToString(va.getArg<SSizeT>());
-      else if (argTraitment == Trait::AsPtrdiff_t)
+      else if (argTraitment == Trait::AsSizeT)
+        toBeWritten = ToString(va.getArg<tSSize>());
+      else if (argTraitment == Trait::AsPtrdiffT)
         toBeWritten = ToString(va.getArg<ptrdiff_t>());
 
       argFlags = ArgFlag::Signed | ArgFlag::Integral | ArgFlag::Decimal;
@@ -173,12 +173,12 @@ int OStream::vprintf(const char *str, va_list args) noexcept
         toBeWritten = ToHexString(va.getArg<unsigned long int>(), upperCase, prefix);
       else if (argTraitment == Trait::AsLongLong)
         toBeWritten = ToHexString(va.getArg<unsigned long long int>(), upperCase, prefix);
-      else if (argTraitment == Trait::AsIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         toBeWritten = ToHexString(va.getArg<uintmax_t>(), upperCase, prefix);
-      else if (argTraitment == Trait::ASSizeT)
+      else if (argTraitment == Trait::AsSizeT)
         toBeWritten = ToHexString(va.getArg<size_t>(), upperCase, prefix);
-      else if (argTraitment == Trait::AsPtrdiff_t)
-        toBeWritten = ToHexString(va.getArg<UPtrDiffT>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToHexString(va.getArg<tUPtrDiff>(), upperCase, prefix);
 
       argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
     }
@@ -196,12 +196,12 @@ int OStream::vprintf(const char *str, va_list args) noexcept
         toBeWritten = ToOctString(va.getArg<unsigned long int>(), prefix);
       else if (argTraitment == Trait::AsLongLong)
         toBeWritten = ToOctString(va.getArg<unsigned long long int>(), prefix);
-      else if (argTraitment == Trait::AsIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         toBeWritten = ToOctString(va.getArg<uintmax_t>(), prefix);
-      else if (argTraitment == Trait::ASSizeT)
+      else if (argTraitment == Trait::AsSizeT)
         toBeWritten = ToOctString(va.getArg<size_t>(), prefix);
-      else if (argTraitment == Trait::AsPtrdiff_t)
-        toBeWritten = ToOctString(va.getArg<UPtrDiffT>(), prefix);
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToOctString(va.getArg<tUPtrDiff>(), prefix);
 
       argFlags = ArgFlag::Integral | ArgFlag::Octal;
     }
@@ -246,11 +246,11 @@ int OStream::vprintf(const char *str, va_list args) noexcept
         *va.getArg<long int *>() = static_cast<long int>(written);
       else if (argTraitment == Trait::AsLongLong)
         *va.getArg<long long int *>() = static_cast<long long int>(written);
-      else if (argTraitment == Trait::AsIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         *va.getArg<intmax_t *>() = static_cast<intmax_t>(written);
-      else if (argTraitment == Trait::ASSizeT)
-        *va.getArg<size_t *>() = static_cast<SSizeT>(written);
-      else if (argTraitment == Trait::AsPtrdiff_t)
+      else if (argTraitment == Trait::AsSizeT)
+        *va.getArg<size_t *>() = static_cast<tSSize>(written);
+      else if (argTraitment == Trait::AsPtrdiffT)
         *va.getArg<ptrdiff_t *>() = static_cast<ptrdiff_t>(written);
     }
     else if (*str == '%')
@@ -259,7 +259,7 @@ int OStream::vprintf(const char *str, va_list args) noexcept
     }
     else
     {
-      written += write(formatBegin, static_cast<SizeType>(str + 1 - formatBegin));
+      written += write(formatBegin, static_cast<tSize>(str + 1 - formatBegin));
     }
 
     if (!toBeWritten.empty())
@@ -273,7 +273,7 @@ int OStream::vprintf(const char *str, va_list args) noexcept
   return written;
 }
 
-int OStream::printf(const char *str, ...) noexcept
+int OStream::printf(const char *str, ...)
 {
   va_list args;
   int retval;
@@ -286,126 +286,126 @@ int OStream::printf(const char *str, ...) noexcept
 }
 
 template <typename T, EnableIfT<IsIntegralV<T>>>
-OStream & OStream::operator<<(T value) noexcept
+OStream & OStream::operator<<(T value)
 {
   write(ToString(value));
   return *this;
 }
 
 template <typename T, EnableIfT<IsFloatingPointV<T>>>
-OStream & OStream::operator<<(T value) noexcept
+OStream & OStream::operator<<(T value)
 {
   write(ToString(value));
   return *this;
 }
 
-OStream & OStream::operator<<(bool value) noexcept
+OStream & OStream::operator<<(bool value)
 {
   write(value ? "true"sv : "false"sv);
   return *this;
 }
 
-OStream & OStream::operator<<(char value) noexcept
+OStream & OStream::operator<<(char value)
 {
   write(value);
   return *this;
 }
 
-OStream & OStream::operator<<(char *str) noexcept
+OStream & OStream::operator<<(char *str)
 {
   if (str != nullptr)
     write(std::string_view{str});
   return *this;
 }
 
-OStream & OStream::operator<<(const char *str) noexcept
+OStream & OStream::operator<<(const char *str)
 {
   if (str != nullptr)
     write(std::string_view{str});
   return *this;
 }
 
-OStream & OStream::operator<<(std::string_view str) noexcept
+OStream & OStream::operator<<(std::string_view str)
 {
   write(str);
   return *this;
 }
 
-OStream & OStream::operator<<(std::nullptr_t) noexcept
+OStream & OStream::operator<<(std::nullptr_t)
 {
   write("nullptr"sv);
   return *this;
 }
 
-OStream & OStream::operator<<(const void *p) noexcept
+OStream & OStream::operator<<(const void *p)
 {
   write(ToHexString(reinterpret_cast<uintptr_t>(p), false, true));
   return *this;
 }
 
-OStream & OStream::operator<<(ManipFunc &function) noexcept
+OStream & OStream::operator<<(ManipFunc &function)
 {
   return function(*this);
 }
 
-inline OStream::SizeType OStream::_write(const char *str, SizeType len) noexcept
+inline OStream::tSize OStream::_write(const char *str, tSize len)
 {
-  return (this->*m_write.external)(str, len);
+  return (this->*write_.external)(str, len);
 }
 
-OStream::SizeType OStream::staticWrite(const char *str, SizeType len) noexcept
+OStream::tSize OStream::staticWrite(const char *str, tSize len)
 {
-  return (*m_write.internal.staticFunc)(str, len);
+  return (*write_.staticFunc)(str, len);
 }
 
-OStream::SizeType OStream::memberWrite(const char *str, SizeType len) noexcept
+OStream::tSize OStream::memberWrite(const char *str, tSize len)
 {
-  return (*m_write.internal.memberFunc)(m_obj, str, len);
+  return (*write_.memberFunc)(obj_, str, len);
 }
 
-OStream::SizeType OStream::dummyWrite(const char *str, SizeType len) noexcept
+OStream::tSize OStream::dummyWrite(const char *str, tSize len)
 {
   static_cast<void>(str);
   static_cast<void>(len);
-  return 0U;
+  return 0u;
 }
 
-inline void OStream::_flush(void) noexcept
+inline void OStream::_flush(void)
 {
-  (this->*m_flush.external)();
+  (this->*flush_.external)();
 }
 
-void OStream::staticFlush(void) noexcept
+void OStream::staticFlush(void)
 {
-  (*m_flush.internal.staticFunc)();
+  (*flush_.staticFunc)();
 }
 
-void OStream::memberFlush(void) noexcept
+void OStream::memberFlush(void)
 {
-  (m_flush.internal.memberFunc)(m_obj);
+  (flush_.memberFunc)(obj_);
 }
 
-void OStream::dummyFlush(void) noexcept
+void OStream::dummyFlush(void)
 {
   /* Do nothing */;
 }
 
-OStream & Flush(OStream &stream) noexcept
+OStream & Flush(OStream &stream)
 {
   stream.flush();
 
   return stream;
 }
 
-OStream & Endl(OStream &stream) noexcept
+OStream & Endl(OStream &stream)
 {
-  stream.write(FMT_ENDL, static_cast<OStream::SizeType>(sizeof(FMT_ENDL) - 1U));
+  stream.write(FMT_ENDL, static_cast<OStream::tSize>(sizeof(FMT_ENDL) - 1u));
   stream.flush();
 
   return stream;
 }
 
-#define FMT_INSTANCIATE_TEMPLATE(TYPE) template OStream & OStream::operator<<(TYPE) noexcept
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template OStream & OStream::operator<<(TYPE)
 #define FMT_INSTANCIATE_INTEGRAL
 #define FMT_INSTANCIATE_FLOATING_POINT
 #include "fmt/instanciate_template.hpp"

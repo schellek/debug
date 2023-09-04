@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_CONTAINER_TYPE_TRAITS_HPP
+#define FMT_CONTAINER_TYPE_TRAITS_HPP
 
 #include <array>
 #include <vector>
@@ -58,3 +59,5 @@ template <typename T>
 inline constexpr bool IsMapV = IsMap<T>::Value;
 
 FMT_END_NAMESPACE
+
+#endif /* FMT_CONTAINER_TYPE_TRAITS_HPP */

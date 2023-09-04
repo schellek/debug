@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_OSTREAM_HPP
+#define FMT_OSTREAM_HPP
 
 #include <cstdarg>
 #include <string_view>
@@ -11,97 +12,95 @@ FMT_BEGIN_NAMESPACE
 class OStream
 {
 public:
-  using SizeType  = FmtSizeType;
-  using StaticWriteFunc = SizeType(const char *, SizeType) noexcept;
-  using MemberWriteFunc = SizeType(void *, const char *, SizeType) noexcept;
-  using StaticFlushFunc = void(void) noexcept;
-  using MemberFlushFunc = void(void *) noexcept;
-  using ManipFunc = OStream &(OStream &) noexcept;
+  using tSize  = tFmtSize;
+  using ManipFunc = OStream & (OStream &);
 
-  struct WriteFunc
+  struct tWrite
   {
+    using StaticFunc = tSize (const char *, tSize);
+    using MemberFunc = tSize (void *, const char *, tSize);
+
     union
     {
-      StaticWriteFunc *staticFunc;
-      MemberWriteFunc *memberFunc;
-    } internal;
-    SizeType(OStream::*external)(const char *, SizeType) noexcept;
+      StaticFunc *staticFunc;
+      MemberFunc *memberFunc;
+    };
+    tSize (OStream::*external)(const char *, tSize);
 
-    WriteFunc(StaticWriteFunc *f) noexcept;
-    WriteFunc(MemberWriteFunc *f) noexcept;
+    tWrite(StaticFunc *f);
+    tWrite(MemberFunc *f);
   };
 
-  struct FlushFunc
+  struct tFlush
   {
+    using StaticFunc = void (void);
+    using MemberFunc = void (void *);
+
     union
     {
-      StaticFlushFunc *staticFunc;
-      MemberFlushFunc *memberFunc;
-    } internal;
-    void(OStream::*external)(void) noexcept;
+      StaticFunc *staticFunc;
+      MemberFunc *memberFunc;
+    };
+    void (OStream::*external)(void);
 
-    FlushFunc(StaticFlushFunc *f) noexcept;
-    FlushFunc(MemberFlushFunc *f) noexcept;
+    tFlush(StaticFunc *f);
+    tFlush(MemberFunc *f);
   };
 
-  using size_type = SizeType;
-
-private:
-  void *const m_obj;
-  const WriteFunc m_write;
-  const FlushFunc m_flush;
-
-public:
   OStream() = delete;
-  OStream(StaticWriteFunc *write, StaticFlushFunc *flush = nullptr) noexcept;
-  OStream(void *obj, MemberWriteFunc *write, MemberFlushFunc *flush = nullptr) noexcept;
+  OStream(tWrite::StaticFunc *write, tFlush::StaticFunc *flush = nullptr);
+  OStream(void *obj, tWrite::MemberFunc *write, tFlush::MemberFunc *flush = nullptr);
 
-  SizeType write(char c) noexcept;
-  SizeType write(char c, SizeType n) noexcept;
-  SizeType write(const char *str, SizeType len) noexcept;
-  SizeType write(std::string_view str) noexcept;
+  tSize write(char c);
+  tSize write(char c, tSize n);
+  tSize write(const char *str, tSize len);
+  tSize write(std::string_view str);
 
-  void flush(void) noexcept;
+  void flush(void);
 
-  int vprintf(const char *str, va_list args) noexcept;
-  int printf(FMT_PRINTF_FMTSTR const char *str, ...) noexcept FMT_PRINTF_FUNC(2);
+  int vprintf(const char *str, va_list args);
+  int printf(FMT_PRINTF_FMTSTR const char *str, ...) FMT_PRINTF_FUNC(2);
 
-  OStream & operator<<(bool value) noexcept;
-  OStream & operator<<(char value) noexcept;
-  OStream & operator<<(char *str) noexcept;
-  OStream & operator<<(const char *str) noexcept;
-  OStream & operator<<(std::string_view str) noexcept;
-  OStream & operator<<(std::nullptr_t) noexcept;
+  OStream & operator<<(bool value);
+  OStream & operator<<(char value);
+  OStream & operator<<(char *str);
+  OStream & operator<<(const char *str);
+  OStream & operator<<(std::string_view str);
+  OStream & operator<<(std::nullptr_t);
 
   template <typename T, EnableIfT<IsIntegralV<T>> = true>
-  OStream & operator<<(T value) noexcept;
+  OStream & operator<<(T value);
 
   template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
-  OStream & operator<<(T value) noexcept;
+  OStream & operator<<(T value);
 
   template <typename T, EnableIfT<IsPointerV<T>> = true>
-  OStream & operator<<(T value) noexcept;
+  OStream & operator<<(T value);
 
   template <typename T, EnableIfT<IsSmartPointerV<T>> = true>
-  OStream & operator<<(T &value) noexcept;
+  OStream & operator<<(T &value);
 
-  OStream & operator<<(const void *p) noexcept;
-  OStream & operator<<(ManipFunc &function) noexcept;
+  OStream & operator<<(const void *p);
+  OStream & operator<<(ManipFunc &function);
 
 private:
-  SizeType _write(const char *str, SizeType len) noexcept;
-  SizeType staticWrite(const char *str, SizeType len) noexcept;
-  SizeType memberWrite(const char *str, SizeType len) noexcept;
-  SizeType dummyWrite(const char *str, SizeType len) noexcept;
+  tSize _write(const char *str, tSize len);
+  tSize staticWrite(const char *str, tSize len);
+  tSize memberWrite(const char *str, tSize len);
+  tSize dummyWrite(const char *str, tSize len);
 
-  void _flush(void) noexcept;
-  void staticFlush(void) noexcept;
-  void memberFlush(void) noexcept;
-  void dummyFlush(void) noexcept;
+  void _flush(void);
+  void staticFlush(void);
+  void memberFlush(void);
+  void dummyFlush(void);
+
+  void *const obj_;
+  const tWrite write_;
+  const tFlush flush_;
 };
 
-OStream & Flush(OStream &stream) noexcept;
-OStream & Endl(OStream &stream) noexcept;
+OStream & Flush(OStream &stream);
+OStream & Endl(OStream &stream);
 
 using ostream = OStream;
 static inline constexpr OStream::ManipFunc &flush = Flush;
@@ -112,3 +111,5 @@ extern OStream cout;
 FMT_END_NAMESPACE
 
 #include "ostream.inl"
+
+#endif /* FMT_OSTREAM_HPP */

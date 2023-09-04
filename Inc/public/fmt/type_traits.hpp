@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_TYPE_TRAITS_HPP
+#define FMT_TYPE_TRAITS_HPP
 
 #include <string_view>
 #include <string>
@@ -26,8 +27,8 @@ struct IntegralConstant
 
   static constexpr const ValueT Value = V;
 
-  constexpr operator ValueT(void) const noexcept   { return Value; }
-  constexpr ValueT operator()(void) const noexcept { return Value; }
+  constexpr operator ValueT(void) const   { return Value; }
+  constexpr ValueT operator()(void) const { return Value; }
 };
 
 template <bool B>
@@ -344,36 +345,36 @@ template <size_t>
 struct SignedInt;
 
 template <>
-struct SignedInt<1U> { using Type = int8_t; };
+struct SignedInt<1u> { using Type = int8_t; };
 
 template <>
-struct SignedInt<2U> { using Type = int16_t; };
+struct SignedInt<2u> { using Type = int16_t; };
 
 template <>
-struct SignedInt<4U> { using Type = int32_t; };
+struct SignedInt<4u> { using Type = int32_t; };
 
 template <>
-struct SignedInt<8U> { using Type = int64_t; };
+struct SignedInt<8u> { using Type = int64_t; };
 
 #ifdef FMT_INT128_SUPPORT
 template <>
-struct SignedInt<16U> { using Type = FmtInt128; };
+struct SignedInt<16u> { using Type = FmtInt128; };
 #endif
 
 template <size_t W>
-using SignedIntT = typename SignedInt<W>::Type;
+using SignedtInt = typename SignedInt<W>::Type;
 
 template <typename T>
 struct __MakeSigned : SignedInt<sizeof(T)> {};
 
 template <typename T>
-struct __MakeSigned<const T> { using Type = const SignedIntT<sizeof(T)>; };
+struct __MakeSigned<const T> { using Type = const SignedtInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeSigned<volatile T> { using Type = volatile SignedIntT<sizeof(T)>; };
+struct __MakeSigned<volatile T> { using Type = volatile SignedtInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeSigned<const volatile T> { using Type = const volatile SignedIntT<sizeof(T)>; };
+struct __MakeSigned<const volatile T> { using Type = const volatile SignedtInt<sizeof(T)>; };
 
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
 using _MakeSigned = __MakeSigned<T>;
@@ -400,36 +401,36 @@ template <size_t>
 struct UnsignedInt;
 
 template <>
-struct UnsignedInt<1U> { using Type = uint8_t; };
+struct UnsignedInt<1u> { using Type = uint8_t; };
 
 template <>
-struct UnsignedInt<2U> { using Type = uint16_t; };
+struct UnsignedInt<2u> { using Type = uint16_t; };
 
 template <>
-struct UnsignedInt<4U> { using Type = uint32_t; };
+struct UnsignedInt<4u> { using Type = uint32_t; };
 
 template <>
-struct UnsignedInt<8U> { using Type = uint64_t; };
+struct UnsignedInt<8u> { using Type = uint64_t; };
 
 #ifdef FMT_INT128_SUPPORT
 template <>
-struct UnsignedInt<16U> { using Type = FmtUInt128; };
+struct UnsignedInt<16u> { using Type = FmtUInt128; };
 #endif
 
 template <size_t W>
-using UnsignedIntT = typename UnsignedInt<W>::Type;
+using UnsignedtInt = typename UnsignedInt<W>::Type;
 
 template <typename T>
 struct __MakeUnsigned : UnsignedInt<sizeof(T)> {};
 
 template <typename T>
-struct __MakeUnsigned<const T> { using Type = const UnsignedIntT<sizeof(T)>; };
+struct __MakeUnsigned<const T> { using Type = const UnsignedtInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeUnsigned<volatile T> { using Type = volatile UnsignedIntT<sizeof(T)>; };
+struct __MakeUnsigned<volatile T> { using Type = volatile UnsignedtInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeUnsigned<const volatile T> { using Type = const volatile UnsignedIntT<sizeof(T)>; };
+struct __MakeUnsigned<const volatile T> { using Type = const volatile UnsignedtInt<sizeof(T)>; };
 
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
 using _MakeUnsigned = __MakeUnsigned<T>;
@@ -439,6 +440,8 @@ using MakeUnsigned = _MakeUnsigned<T>;
 
 template <typename T>
 using MakeUnsignedT = typename MakeUnsigned<T>::Type;
+
+#define MAKE_FALSE(TYPE_TRAIT) struct TYPE_TRAIT : FalseType {}
 
 template <typename T>
 struct __IsSmartPointer : FalseType {};
@@ -477,3 +480,5 @@ template <typename T>
 inline constexpr bool IsStringTypeV = IsStringType<T>::Value;
 
 FMT_END_NAMESPACE
+
+#endif /* FMT_TYPE_TRAITS_HPP */

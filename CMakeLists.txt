@@ -6,7 +6,7 @@ set(FMT_LIB fmt)
 add_library(${FMT_LIB} STATIC)
 
 set_property(TARGET ${FMT_LIB}
-  PROPERTY CXX_STANDARD 17
+  PROPERTY CXX_STANDARD_REQUIRED 17
 )
 
 target_sources(${FMT_LIB}

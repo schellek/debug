@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_FORMAT_OPTIONS_HPP
+#define FMT_FORMAT_OPTIONS_HPP
 
 #include <cstdint>
 #include <string_view>
@@ -10,14 +11,14 @@ FMT_BEGIN_NAMESPACE
 
 enum class Trait : unsigned int
 {
-  Regular = 0U,
+  Regular = 0u,
   AsChar,
   AsShort,
   AsLong,
   AsLongLong,
-  AsIntmax_t,
-  ASSizeT,
-  AsPtrdiff_t,
+  AsIntmaxT,
+  AsSizeT,
+  AsPtrdiffT,
   AsInvalid
 };
 
@@ -35,8 +36,10 @@ struct FormatOptions
   int precision;
 };
 
-const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-const char * ParseArgTraitment(const char *str, Trait &argTraitment) noexcept;
-bool FormattingIsRequired(const FormatOptions &formatOptions) noexcept;
+const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions);
+const char * ParseArgTraitment(const char *str, Trait &argTraitment);
+bool FormattingIsRequired(const FormatOptions &formatOptions);
 
 FMT_END_NAMESPACE
+
+#endif /* FMT_FORMAT_OPTIONS_HPP */

@@ -11,12 +11,12 @@ static constexpr FormatOptions DEFAULT_FORMATTING =
   FormatOptions::NOT_SPECIFIED, FormatOptions::NOT_SPECIFIED
 };
 
-static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept;
-static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-static const char * parseFlag(const char *str, FormatOptions &formatOptions) noexcept;
+static const char * parseFlags(const char *str, FormatOptions &formatOptions);
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions);
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions);
+static const char * parseFlag(const char *str, FormatOptions &formatOptions);
 
-const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   std::memcpy(&formatOptions, &DEFAULT_FORMATTING, sizeof(FormatOptions));
 
@@ -27,7 +27,7 @@ const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &fo
   return str;
 }
 
-const char * ParseArgTraitment(const char *str, Trait &argTraitment) noexcept
+const char * ParseArgTraitment(const char *str, Trait &argTraitment)
 {
   argTraitment = Trait::Regular;
 
@@ -56,21 +56,21 @@ const char * ParseArgTraitment(const char *str, Trait &argTraitment) noexcept
   }
 
   if (*str == 'j')
-    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsIntmax_t : Trait::AsInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsIntmaxT : Trait::AsInvalid);
   else if (*str == 'z')
-    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::ASSizeT : Trait::AsInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsSizeT : Trait::AsInvalid);
   else if (*str == 't')
-    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsPtrdiff_t : Trait::AsInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsPtrdiffT : Trait::AsInvalid);
 
   return str;
 }
 
-bool FormattingIsRequired(const FormatOptions &formatOptions) noexcept
+bool FormattingIsRequired(const FormatOptions &formatOptions)
 {
   return (std::memcmp(&formatOptions, &DEFAULT_FORMATTING, sizeof(FormatOptions)) != 0);
 }
 
-static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept
+static const char * parseFlags(const char *str, FormatOptions &formatOptions)
 {
   const char *preParse, *postParse = str;
 
@@ -83,7 +83,7 @@ static const char * parseFlags(const char *str, FormatOptions &formatOptions) no
   return postParse;
 }
 
-static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   const char *preParse = str;
   int fieldWidth = 0;
@@ -106,7 +106,7 @@ static const char * parseWidth(const char *str, VaList &args, FormatOptions &for
   return str;
 }
 
-static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   const char *preParse = str;
   int precision = 0;
@@ -139,7 +139,7 @@ static const char * parsePrecision(const char *str, VaList &args, FormatOptions 
   return str;
 }
 
-static const char * parseFlag(const char *str, FormatOptions &formatOptions) noexcept
+static const char * parseFlag(const char *str, FormatOptions &formatOptions)
 {
   bool flagSpecified = true;
 

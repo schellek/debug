@@ -4,22 +4,23 @@
 #include "fmt/string_conv_buffer.hpp"
 #include "fmt/type_traits.hpp"
 #include "fmt/floating_point.hpp"
+#include <cmath>
 
 FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
 
-template <typename T, EnableIfT<IsFloatingPointV<T>> = true>
-static std::string_view _ToString(FloatingPoint<T> value) noexcept;
+template <typename T>
+static std::string_view _ToString(FloatingPoint<T> value);
 
 template <typename T, EnableIfT<IsFloatingPointV<T>>>
-std::string_view ToString(T value) noexcept
+std::string_view ToString(T value)
 {
   std::string_view retval;
   FloatingPoint<T> num{value};
 
   if (num.isZero())
-    retval = (num.b.sign) ? "-0"sv : "0";
+    retval = (num.b.sign) ? "-0"sv : "0"sv;
 
   else if (num.isInf())
     retval = (num.b.sign) ? "-inf"sv : "inf"sv;
@@ -33,22 +34,56 @@ std::string_view ToString(T value) noexcept
   return retval;
 }
 
-template <typename T, EnableIfT<IsFloatingPointV<T>>>
-static std::string_view _ToString(FloatingPoint<T> value) noexcept
+template <typename T>
+static std::string_view _ToString(FloatingPoint<T> value)
 {
-  // using FloatT = typename FloatingPoint<T>::FloatT;
-  // using UIntT  = typename FloatingPoint<T>::UIntT;
-  using IntT   = typename FloatingPoint<T>::IntT;
+  FloatingPoint<T> vPlus = value, vMinus = value;
 
-  const IntT e = value.exponent();
-  static_cast<void>(e);
+  if (value.exponent() >= 0)
+  {
+
+  }
+  else
+  {
+
+  }
+
+  if ((value.b.biasedExponent) == 0u /*|| (value.b.mantissa)*/) [[likely]]
+  {
+    // v- = (f - 1) * b^e
+
+  }
+  else
+  {
+
+    --vMinus.b.biasedExponent;
+    // v- = (b^p - 1) * b^(e - 1)
+  }
+
+  // v+ = (f + 1) * b^e
+
+  // f =
+  // b = 2
+  // e = unbiased exponent
+  // v = f * b^e
+  //
+  // v- = v - b^e         if e == min or f != b^(p - 1)
+  //    = v - b^(e - 1)   else
+  //
+  // v+ = v + b^(e - 1)
+  //
+  // p is the fixed size of the mantissa in base digits
+
+
+  (void)vPlus;
+  (void)vMinus;
 
   return "<float>"sv;
 }
 
 FMT_END_NAMESPACE
 
-#define FMT_INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::ToString(TYPE) noexcept
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template std::string_view FMT_ABI::ToString(TYPE)
 #define FMT_INSTANCIATE_FLOATING_POINT
 #include "fmt/instanciate_template.hpp"
 #undef FMT_INSTANCIATE_TEMPLATE

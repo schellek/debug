@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FMT_STDOUT_H
+#define FMT_STDOUT_H
 
 #include "fmt/fmt.h"
 
@@ -8,9 +9,9 @@ FMT_BEGIN_GLOBAL_NAMESPACE
  * @brief         Writes a string to stdout
  * @param[in]     str: String to be written
  * @param[in]     len: Length of the string
- * @return        FmtSizeType: Number of characters written
+ * @return        tFmtSize: Number of characters written
  */
-FmtSizeType FmtWrite(const char *str, FmtSizeType len);
+tFmtSize FmtWrite(const char *str, tFmtSize len);
 
 /**
  * @brief         Prints a formatted string to stdout
@@ -81,3 +82,5 @@ void FmtFlush(void);
 void FmtAssertFailed(const char *expr, const char *file, uint32_t line);
 
 FMT_END_GLOBAL_NAMESPACE
+
+#endif /* FMT_STDOUT_H */

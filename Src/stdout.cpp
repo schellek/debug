@@ -6,9 +6,9 @@
 
 static char *stringBufferPos, *stringBufferEnd;
 
-static FmtSizeType StringBufferWrite(const char *str, FmtSizeType size) noexcept;
+static tFmtSize StringBufferWrite(const char *str, tFmtSize size);
 
-FmtSizeType FmtWrite(const char *str, FmtSizeType len)
+tFmtSize FmtWrite(const char *str, tFmtSize len)
 {
   return FMT_ABI::cout.write(str, len);
 }
@@ -47,7 +47,7 @@ int FmtSPrintf(char *buf, const char *str, ...)
 int FmtSNPrintf(char *buf, size_t n, const char *str, ...)
 {
   stringBufferPos = buf;
-  stringBufferEnd = buf + n - 1U;
+  stringBufferEnd = buf + n - 1u;
 
   FMT_ABI::OStream sstream{&StringBufferWrite};
 
@@ -65,8 +65,8 @@ int FmtSNPrintf(char *buf, size_t n, const char *str, ...)
 
 int FmtPutS(const char *str)
 {
-  FmtSizeType len = FMT_ABI::cout.write(std::string_view{str});
-  len += FMT_ABI::cout.write(FMT_ENDL, static_cast<FmtSizeType>(sizeof(FMT_ENDL) - 1U));
+  tFmtSize len = FMT_ABI::cout.write(std::string_view{str});
+  len += FMT_ABI::cout.write(FMT_ENDL, static_cast<tFmtSize>(sizeof(FMT_ENDL) - 1u));
 
   return static_cast<int>(len);
 }
@@ -92,12 +92,12 @@ void FmtAssertFailed(const char *expr, const char *file, uint32_t line)
   exit(EXIT_FAILURE);
 }
 
-static FmtSizeType StringBufferWrite(const char *str, FmtSizeType size) noexcept
+static tFmtSize StringBufferWrite(const char *str, tFmtSize size)
 {
   if (stringBufferEnd == nullptr)
     /* Do nothing */;
   else if ((stringBufferPos + size) > stringBufferEnd)
-    size = static_cast<FmtSizeType>(stringBufferEnd - stringBufferPos);
+    size = static_cast<tFmtSize>(stringBufferEnd - stringBufferPos);
 
   stringBufferPos = std::copy_n(str, size, stringBufferPos);
   return size;

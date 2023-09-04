@@ -1,44 +1,45 @@
-#pragma once
+#ifndef FMT_FLOATING_POINT_HPP
+#define FMT_FLOATING_POINT_HPP
 
 #include "fmt/fmt.h"
 #include "fmt/type_traits.hpp"
 #include "fmt/extended_types.h"
-#include "fmt/log2.hpp"
+#include "fmt/math.hpp"
 
 FMT_BEGIN_NAMESPACE
 
-template <unsigned int M = 0U, unsigned int B = 0U, bool InfNan = true>
+template <unsigned int MantW = 0u, unsigned int BiasedExpW = 0u, bool InfNan = true>
 struct __FloatingPointLayout
 {
   enum : unsigned int
   {
-    MANTISSA_WIDTH        = M,
-    BIASED_EXPONENT_WIDTH = B,
-
-    REQUIRED_WIDTH        = M + B + 1
+    BASE                  = 2u,
+    MANTISSA_WIDTH        = MantW,
+    BIASED_EXPONENT_WIDTH = BiasedExpW,
+    REQUIRED_WIDTH        = MANTISSA_WIDTH + BIASED_EXPONENT_WIDTH + 1
   };
 
-  static constexpr bool isValid(void) noexcept { return (M > 0U) && (B > 0U); }
-  static constexpr bool hasInf(void) noexcept  { return InfNan; }
-  static constexpr bool hasNan(void) noexcept  { return InfNan; }
+  static constexpr bool isValid(void) { return (MANTISSA_WIDTH > 0u) && (BIASED_EXPONENT_WIDTH > 0u); }
+  static constexpr bool hasInf(void)  { return InfNan; }
+  static constexpr bool hasNan(void)  { return InfNan; }
 };
 
-template <unsigned int M = 0U, unsigned int B = 0U>
-struct _FloatingPointLayout : __FloatingPointLayout<M, B> {};
+template <unsigned int MantW = 0u, unsigned int BiasedExpW = 0u>
+struct _FloatingPointLayout : __FloatingPointLayout<MantW, BiasedExpW> {};
 
 template <>
-struct _FloatingPointLayout<7U, 8U> : __FloatingPointLayout<7U, 8U, false> {};
+struct _FloatingPointLayout<7u, 8u> : __FloatingPointLayout<7u, 8u, false> {};
 
-using BrainFloat       = _FloatingPointLayout<7U,   8U>;
-using Ieee754Half      = _FloatingPointLayout<10U,  5U>;
-using Ieee754Single    = _FloatingPointLayout<23U,  8U>;
-using Ieee754SingleExt = _FloatingPointLayout<31U,  8U>;
-using Ieee754Double    = _FloatingPointLayout<52U,  11U>;
-using Ieee754DoubleExt = _FloatingPointLayout<64U,  15U>;
-using Ieee754Quadruple = _FloatingPointLayout<112U, 15U>;
+using BrainFloat       = _FloatingPointLayout<7u,   8u>;
+using Ieee754Half      = _FloatingPointLayout<10u,  5u>;
+using Ieee754Single    = _FloatingPointLayout<23u,  8u>;
+using Ieee754SingleExt = _FloatingPointLayout<31u,  8u>;
+using Ieee754Double    = _FloatingPointLayout<52u,  11u>;
+using Ieee754DoubleExt = _FloatingPointLayout<64u,  15u>;
+using Ieee754Quadruple = _FloatingPointLayout<112u, 15u>;
 
 template <unsigned int MantDig, unsigned int MaxExp>
-using FloatHLayout = _FloatingPointLayout<MantDig - 1U, Log2(MaxExp) + 1U>;
+using FloatHLayout = _FloatingPointLayout<MantDig - 1u, Log2(MaxExp) + 1u>;
 
 template <typename T>
 struct FloatingPointLayout : _FloatingPointLayout<> {};
@@ -67,57 +68,56 @@ template <>
 struct FloatingPointLayout<FmtFloat128> : Ieee754Quadruple {};
 #endif // FMT_FLOAT128_SUPPORT
 
-template <typename T, typename LayoutT, unsigned int P>
+template <typename T, typename tLayout, unsigned int P>
 struct __FloatingPointBitfield
 {
-  T mantissa       : LayoutT::MANTISSA_WIDTH;
-  T biasedExponent : LayoutT::BIASED_EXPONENT_WIDTH;
-  T sign           : 1U;
+  T mantissa       : tLayout::MANTISSA_WIDTH;
+  T biasedExponent : tLayout::BIASED_EXPONENT_WIDTH;
+  T sign           : 1u;
   T padding        : P;
 };
 
-template <typename T, typename LayoutT>
-struct __FloatingPointBitfield<T, LayoutT, 0U>
+template <typename T, typename tLayout>
+struct __FloatingPointBitfield<T, tLayout, 0u>
 {
-  T mantissa       : LayoutT::MANTISSA_WIDTH;
-  T biasedExponent : LayoutT::BIASED_EXPONENT_WIDTH;
-  T sign           : 1U;
+  T mantissa       : tLayout::MANTISSA_WIDTH;
+  T biasedExponent : tLayout::BIASED_EXPONENT_WIDTH;
+  T sign           : 1u;
 };
 
-template <typename T, typename LayoutT>
-using FloatingPointBitfield = __FloatingPointBitfield<T, LayoutT, sizeof(T) * 8U - LayoutT::REQUIRED_WIDTH>;
+template <typename T, typename tLayout>
+using FloatingPointBitfield = __FloatingPointBitfield<T, tLayout, sizeof(T) * 8u - tLayout::REQUIRED_WIDTH>;
 
 template <typename T>
 union FloatingPoint
 {
 public:
-  using FloatT  = T;
-  using UIntT   = UnsignedIntT<sizeof(FloatT)>;
-  using IntT    = SignedIntT<sizeof(FloatT)>;
+  using tFloat  = T;
+  using tUInt   = UnsignedtInt<sizeof(tFloat)>;
+  using tInt    = SignedtInt<sizeof(tFloat)>;
+  using tLayout = FloatingPointLayout<T>;
+  static_assert(tLayout::isValid());
+
+  tFloat f;
+  alignas(alignof(T)) tUInt w;
+  alignas(alignof(T)) FloatingPointBitfield<tUInt, tLayout> b;
+
+  constexpr FloatingPoint(tFloat f);
+  constexpr FloatingPoint(tUInt w);
+
+  tInt exponent(void);
+
+  bool isZero(void);
+  bool isInf(void);
+  bool isNan(void);
 
 private:
-  using LayoutT = FloatingPointLayout<T>;
-  static_assert(LayoutT::isValid());
-
-  static constexpr UIntT bias              = (1U << (LayoutT::BIASED_EXPONENT_WIDTH - 1U)) - 1U;
-  static constexpr UIntT biasedExponentMax = (1U << LayoutT::BIASED_EXPONENT_WIDTH) - 1U;
-
-public:
-  FloatT f;
-  alignas(alignof(T)) UIntT w;
-  alignas(alignof(T)) FloatingPointBitfield<UIntT, LayoutT> b;
-
-public:
-  constexpr FloatingPoint(FloatT f) noexcept;
-  constexpr FloatingPoint(UIntT w) noexcept;
-
-  IntT exponent(void) noexcept;
-
-  bool isZero(void) noexcept;
-  bool isInf(void) noexcept;
-  bool isNan(void) noexcept;
+  static constexpr tUInt bias              = (1u << (tLayout::BIASED_EXPONENT_WIDTH - 1u)) - 1u;
+  static constexpr tUInt biasedExponentMax = (1u << tLayout::BIASED_EXPONENT_WIDTH) - 1u;
 };
 
 FMT_END_NAMESPACE
 
 #include "fmt/floating_point.inl"
+
+#endif /* FMT_FLOATING_POINT_HPP */
