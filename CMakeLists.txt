@@ -6,7 +6,7 @@ set(FMT_LIB fmt)
 add_library(${FMT_LIB} STATIC)
 
 set_property(TARGET ${FMT_LIB}
-  PROPERTY CXX_STANDARD 17
+  PROPERTY CXX_STANDARD_REQUIRED 17
 )
 
 target_sources(${FMT_LIB}
@@ -15,7 +15,13 @@ target_sources(${FMT_LIB}
   ${CMAKE_CURRENT_LIST_DIR}/Src/ostream.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/format_options.cpp
   ${CMAKE_CURRENT_LIST_DIR}/Src/formatted_writer.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv_int.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/Src/string_conv_float.cpp
+)
+
+target_include_directories(${FMT_LIB}
+  PRIVATE
+  ${CMAKE_CURRENT_LIST_DIR}/Inc/private
 )
 
 include(fmt.cmake)

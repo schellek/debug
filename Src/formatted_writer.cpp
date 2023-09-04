@@ -1,27 +1,24 @@
-#include "formatted_writer.hpp"
+#include "fmt/formatted_writer.hpp"
 
-#define IS_FLAG_SET(BITFIELD, FLAG)  (((BITFIELD) & (FLAG)) != 0)
+FMT_BEGIN_NAMESPACE
 
-namespace fmt
-{
-
-FormattedWriter::FormattedWriter(ostream &stream) noexcept
-  : ostream{stream}
+FormattedWriter::FormattedWriter(OStream &stream)
+  : OStream{stream}
 {
 }
 
-FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWritten,
-                                                       const FormatOptions options,
-                                                       const uint8_t argFlags) noexcept
+FormattedWriter::tSize FormattedWriter::operator()(std::string_view toBeWritten,
+                                                      const FormatOptions options,
+                                                      const ArgFlag argFlags)
 {
-  size_type written = 0U;
+  tSize written = 0u;
   int fieldWidth = options.fieldWidth;
 
-  const bool isIntegral = IS_FLAG_SET(argFlags, ArgFlag::Integral);
-  const bool isArithmetic = IS_FLAG_SET(argFlags, ArgFlag::Integral | ArgFlag::FloatingPoint);
-  const bool isString = IS_FLAG_SET(argFlags, ArgFlag::String);
-  const bool isSigned = IS_FLAG_SET(argFlags, ArgFlag::Signed);
-  const bool isHexPrefixed = options.hashFlag && IS_FLAG_SET(argFlags, ArgFlag::Hexadecimal);
+  const bool isIntegral = IsFlagSet(argFlags, ArgFlag::Integral);
+  const bool isArithmetic = IsFlagSet(argFlags, ArgFlag::Integral | ArgFlag::FloatingPoint);
+  const bool isString = IsFlagSet(argFlags, ArgFlag::String);
+  const bool isSigned = IsFlagSet(argFlags, ArgFlag::Signed);
+  const bool isHexPrefixed = options.hashFlag && IsFlagSet(argFlags, ArgFlag::Hexadecimal);
   const bool isNegative = isSigned && (toBeWritten.at(0) == '-');
   char signChar = '\0';
   std::string_view prefix;
@@ -29,7 +26,7 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
   if (!isSigned)
     /* Do nothing */;
   else if (isNegative)
-    signChar = (toBeWritten.remove_prefix(1U), --fieldWidth, '-');
+    signChar = (toBeWritten.remove_prefix(1u), --fieldWidth, '-');
   else if (options.plusFlag)
     signChar = (--fieldWidth, '+');
   else if (options.spaceFlag)
@@ -37,28 +34,28 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
 
   if (isHexPrefixed)
   {
-    prefix = toBeWritten.substr(0U, 2U);
-    toBeWritten.remove_prefix(2U);
+    prefix = toBeWritten.substr(0u, 2u);
+    toBeWritten.remove_prefix(2u);
     fieldWidth -= 2;
   }
 
-  size_type toBeWrittenSize = static_cast<size_type>(toBeWritten.size());
+  tSize toBeWrittenSize = static_cast<tSize>(toBeWritten.size());
 
   if (isString && (options.precision != FormatOptions::NOT_SPECIFIED) && (options.precision < toBeWrittenSize))
   {
-    size_type toRemove = static_cast<size_type>(toBeWrittenSize - options.precision);
+    tSize toRemove = static_cast<tSize>(toBeWrittenSize - options.precision);
     toBeWritten.remove_suffix(toRemove);
     toBeWrittenSize -= toRemove;
   }
 
-  size_type subFieldWidth;
+  tSize subFieldWidth;
 
   if (isIntegral && (options.precision > toBeWrittenSize))
     subFieldWidth = options.precision;
   else
     subFieldWidth = toBeWrittenSize;
 
-  if (const bool isZero = isIntegral && (toBeWrittenSize == 1U) && (toBeWritten.at(0) == '0');
+  if (const bool isZero = isIntegral && (toBeWrittenSize == 1u) && (toBeWritten.at(0) == '0');
       isZero && (options.precision == 0))
   {
     /* Do nothing */;
@@ -72,12 +69,12 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (subFieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(subFieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<tSize>(subFieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
 
     if (fieldWidth > written)
-      written += write(' ', static_cast<size_type>(fieldWidth - written));
+      written += write(' ', static_cast<tSize>(fieldWidth - written));
   }
   else if (isArithmetic && (subFieldWidth == toBeWrittenSize) && options.zeroFlag)
   {
@@ -88,14 +85,14 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (fieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(fieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<tSize>(fieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
   }
   else
   {
     if (fieldWidth > subFieldWidth)
-      written += write(' ', static_cast<size_type>(fieldWidth - subFieldWidth));
+      written += write(' ', static_cast<tSize>(fieldWidth - subFieldWidth));
 
     if (signChar != '\0')
       written += write(signChar);
@@ -104,7 +101,7 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
       written += write(prefix);
 
     if (subFieldWidth > toBeWrittenSize)
-      written += write('0', static_cast<size_type>(subFieldWidth - toBeWrittenSize));
+      written += write('0', static_cast<tSize>(subFieldWidth - toBeWrittenSize));
 
     written += write(toBeWritten);
   }
@@ -112,4 +109,4 @@ FormattedWriter::size_type FormattedWriter::operator()(std::string_view toBeWrit
   return written;
 }
 
-} // namespace fmt
+FMT_END_NAMESPACE

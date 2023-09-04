@@ -1,7 +1,7 @@
 function(fmt_include_directories TARGET)
   target_include_directories(${TARGET}
     PUBLIC
-    ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Inc
+    ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/Inc/public
   )
 endfunction()
 

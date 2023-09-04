@@ -1,67 +1,88 @@
-#include <cstring>
 #include <cstdlib>
 #include <cctype>
 
-#include "fmt/ostream.hpp"
 #include "fmt/string_conv.hpp"
-#include "va_list.hpp"
-#include "format_options.hpp"
-#include "formatted_writer.hpp"
+#include "fmt/va_list.hpp"
+#include "fmt/format_options.hpp"
+#include "fmt/formatted_writer.hpp"
 
+FMT_BEGIN_NAMESPACE
 
 using namespace std::string_view_literals;
+using tSSize = MakeSignedT<size_t>;
+using tUPtrDiff = MakeUnsignedT<ptrdiff_t>;
 
-namespace fmt
+OStream::tWrite::tWrite(tWrite::StaticFunc *f)
 {
-
-using ssize_t = std::make_signed_t<size_t>;
-using uptrdiff_t = std::make_unsigned_t<ptrdiff_t>;
-
-ostream::ostream(write_func *write, flush_func *flush) noexcept
-  : m_write{write}, m_flush{flush}
-{
-  if (write == nullptr)
-    exit(EXIT_FAILURE);
+  staticFunc = f;
+  external = (f != nullptr) ? &OStream::staticWrite : &OStream::dummyWrite;
 }
 
-ostream::size_type ostream::write(char c) noexcept
+OStream::tWrite::tWrite(tWrite::MemberFunc *f)
 {
-  return (*m_write)(&c, 1);
+  memberFunc = f;
+  external = (f != nullptr) ? &OStream::memberWrite : &OStream::dummyWrite;
 }
 
-ostream::size_type ostream::write(char c, size_type n) noexcept
+OStream::tFlush::tFlush(tFlush::StaticFunc *f)
 {
-  constexpr size_type WRITE_CHUNK_SIZE = 20U;
+  staticFunc = f;
+  external = (f != nullptr) ? &OStream::staticFlush : &OStream::dummyFlush;
+}
+
+OStream::tFlush::tFlush(tFlush::MemberFunc *f)
+{
+  memberFunc = f;
+  external = (f != nullptr) ? &OStream::memberFlush : &OStream::dummyFlush;
+}
+
+OStream::OStream(tWrite::StaticFunc *write, tFlush::StaticFunc *flush)
+  : obj_{nullptr}, write_{write}, flush_{flush}
+{
+}
+
+OStream::OStream(void *obj, tWrite::MemberFunc *write, tFlush::MemberFunc *flush)
+  : obj_{obj}, write_{write}, flush_{flush}
+{
+}
+
+OStream::tSize OStream::write(char c)
+{
+  return _write(&c, 1u);
+}
+
+OStream::tSize OStream::write(char c, tSize n)
+{
+  constexpr tSize WRITE_CHUNK_SIZE = 20u;
   char toWrite[WRITE_CHUNK_SIZE];
-  size_type written = 0U;
+  tSize written = 0u;
 
   std::fill_n(toWrite, (n < WRITE_CHUNK_SIZE) ? n : WRITE_CHUNK_SIZE, c);
 
   for (; n > WRITE_CHUNK_SIZE; n -= WRITE_CHUNK_SIZE)
-    written += (*m_write)(toWrite, WRITE_CHUNK_SIZE);
+    written += _write(toWrite, WRITE_CHUNK_SIZE);
 
-  written += (*m_write)(toWrite, n);
+  written += _write(toWrite, n);
 
   return written;
 }
 
-ostream::size_type ostream::write(const char *str, size_type len) noexcept
+OStream::tSize OStream::write(const char *str, tSize len)
 {
-  return ((str != nullptr) && (len > 0U)) ? (*m_write)(str, len) : size_type{0};
+  return ((str != nullptr) && (len > 0u)) ? _write(str, len) : tSize{0};
 }
 
-ostream::size_type ostream::write(std::string_view str) noexcept
+OStream::tSize OStream::write(std::string_view str)
 {
-  return (!str.empty()) ? (*m_write)(str.data(), static_cast<size_type>(str.size())) : size_type{0};
+  return (!str.empty()) ?_write(str.data(), static_cast<tSize>(str.size())) : tSize{0};
 }
 
-void ostream::flush(void) noexcept
+void OStream::flush(void)
 {
-  if (m_flush != nullptr)
-    (*m_flush)();
+  _flush();
 }
 
-int ostream::vprintf(const char *str, va_list args) noexcept
+int OStream::vprintf(const char *str, va_list args)
 {
   int written = 0;
 
@@ -69,9 +90,9 @@ int ostream::vprintf(const char *str, va_list args) noexcept
 
   const char *formatBegin;
   FormatOptions formatOptions;
-  trait argTraitment;
+  Trait argTraitment;
   std::string_view toBeWritten;
-  uint8_t argFlags;
+  ArgFlag argFlags;
   char c;
 
   VaList va{args};
@@ -86,54 +107,54 @@ int ostream::vprintf(const char *str, va_list args) noexcept
 
     formatBegin = str++;
 
-    str = parseFormatOptions(str, va, formatOptions);
-    str = parseArgTraitment(str, argTraitment);
+    str = ParseFormatOptions(str, va, formatOptions);
+    str = ParseArgTraitment(str, argTraitment);
 
-    if (argTraitment == trait::asInvalid)
+    if (argTraitment == Trait::AsInvalid)
       continue;
 
     toBeWritten = ""sv;
-    argFlags = 0U;
+    argFlags = ArgFlag::None;
 
     if (*str == 'u')
     {
-      if (argTraitment == trait::regular)
-        toBeWritten = toString(va.getArg<unsigned int>());
-      else if (argTraitment == trait::asChar)
-        toBeWritten = toString(va.getArg<unsigned char>());
-      else if (argTraitment == trait::asShort)
-        toBeWritten = toString(va.getArg<unsigned short int>());
-      else if (argTraitment == trait::asLong)
-        toBeWritten = toString(va.getArg<unsigned long int>());
-      else if (argTraitment == trait::asLongLong)
-        toBeWritten = toString(va.getArg<unsigned long long int>());
-      else if (argTraitment == trait::asIntmax_t)
-        toBeWritten = toString(va.getArg<uintmax_t>());
-      else if (argTraitment == trait::asSize_t)
-        toBeWritten = toString(va.getArg<size_t>());
-      else if (argTraitment == trait::asPtrdiff_t)
-        toBeWritten = toString(va.getArg<uptrdiff_t>());
+      if (argTraitment == Trait::Regular)
+        toBeWritten = ToString(va.getArg<unsigned int>());
+      else if (argTraitment == Trait::AsChar)
+        toBeWritten = ToString(va.getArg<unsigned char>());
+      else if (argTraitment == Trait::AsShort)
+        toBeWritten = ToString(va.getArg<unsigned short int>());
+      else if (argTraitment == Trait::AsLong)
+        toBeWritten = ToString(va.getArg<unsigned long int>());
+      else if (argTraitment == Trait::AsLongLong)
+        toBeWritten = ToString(va.getArg<unsigned long long int>());
+      else if (argTraitment == Trait::AsIntmaxT)
+        toBeWritten = ToString(va.getArg<uintmax_t>());
+      else if (argTraitment == Trait::AsSizeT)
+        toBeWritten = ToString(va.getArg<size_t>());
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToString(va.getArg<tUPtrDiff>());
 
       argFlags = ArgFlag::Integral | ArgFlag::Decimal;
     }
     else if ((*str == 'd') || (*str == 'i'))
     {
-      if (argTraitment == trait::regular)
-        toBeWritten = toString(va.getArg<int>());
-      else if (argTraitment == trait::asChar)
-        toBeWritten = toString(va.getArg<signed char>());
-      else if (argTraitment == trait::asShort)
-        toBeWritten = toString(va.getArg<short int>());
-      else if (argTraitment == trait::asLong)
-        toBeWritten = toString(va.getArg<long int>());
-      else if (argTraitment == trait::asLongLong)
-        toBeWritten = toString(va.getArg<long long int>());
-      else if (argTraitment == trait::asIntmax_t)
-        toBeWritten = toString(va.getArg<intmax_t>());
-      else if (argTraitment == trait::asSize_t)
-        toBeWritten = toString(va.getArg<ssize_t>());
-      else if (argTraitment == trait::asPtrdiff_t)
-        toBeWritten = toString(va.getArg<ptrdiff_t>());
+      if (argTraitment == Trait::Regular)
+        toBeWritten = ToString(va.getArg<int>());
+      else if (argTraitment == Trait::AsChar)
+        toBeWritten = ToString(va.getArg<signed char>());
+      else if (argTraitment == Trait::AsShort)
+        toBeWritten = ToString(va.getArg<short int>());
+      else if (argTraitment == Trait::AsLong)
+        toBeWritten = ToString(va.getArg<long int>());
+      else if (argTraitment == Trait::AsLongLong)
+        toBeWritten = ToString(va.getArg<long long int>());
+      else if (argTraitment == Trait::AsIntmaxT)
+        toBeWritten = ToString(va.getArg<intmax_t>());
+      else if (argTraitment == Trait::AsSizeT)
+        toBeWritten = ToString(va.getArg<tSSize>());
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToString(va.getArg<ptrdiff_t>());
 
       argFlags = ArgFlag::Signed | ArgFlag::Integral | ArgFlag::Decimal;
     }
@@ -142,22 +163,22 @@ int ostream::vprintf(const char *str, va_list args) noexcept
       const bool upperCase = (*str == 'X');
       const bool prefix = formatOptions.hashFlag;
 
-      if (argTraitment == trait::regular)
-        toBeWritten = toHexString(va.getArg<unsigned int>(), upperCase, prefix);
-      else if (argTraitment == trait::asChar)
-        toBeWritten = toHexString(va.getArg<unsigned char>(), upperCase, prefix);
-      else if (argTraitment == trait::asShort)
-        toBeWritten = toHexString(va.getArg<unsigned short int>(), upperCase, prefix);
-      else if (argTraitment == trait::asLong)
-        toBeWritten = toHexString(va.getArg<unsigned long int>(), upperCase, prefix);
-      else if (argTraitment == trait::asLongLong)
-        toBeWritten = toHexString(va.getArg<unsigned long long int>(), upperCase, prefix);
-      else if (argTraitment == trait::asIntmax_t)
-        toBeWritten = toHexString(va.getArg<uintmax_t>(), upperCase, prefix);
-      else if (argTraitment == trait::asSize_t)
-        toBeWritten = toHexString(va.getArg<size_t>(), upperCase, prefix);
-      else if (argTraitment == trait::asPtrdiff_t)
-        toBeWritten = toHexString(va.getArg<uptrdiff_t>(), upperCase, prefix);
+      if (argTraitment == Trait::Regular)
+        toBeWritten = ToHexString(va.getArg<unsigned int>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsChar)
+        toBeWritten = ToHexString(va.getArg<unsigned char>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsShort)
+        toBeWritten = ToHexString(va.getArg<unsigned short int>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsLong)
+        toBeWritten = ToHexString(va.getArg<unsigned long int>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsLongLong)
+        toBeWritten = ToHexString(va.getArg<unsigned long long int>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsIntmaxT)
+        toBeWritten = ToHexString(va.getArg<uintmax_t>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsSizeT)
+        toBeWritten = ToHexString(va.getArg<size_t>(), upperCase, prefix);
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToHexString(va.getArg<tUPtrDiff>(), upperCase, prefix);
 
       argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
     }
@@ -165,30 +186,30 @@ int ostream::vprintf(const char *str, va_list args) noexcept
     {
       const bool prefix = formatOptions.hashFlag;
 
-      if (argTraitment == trait::regular)
-        toBeWritten = toOctString(va.getArg<unsigned int>(), prefix);
-      else if (argTraitment == trait::asChar)
-        toBeWritten = toOctString(va.getArg<unsigned char>(), prefix);
-      else if (argTraitment == trait::asShort)
-        toBeWritten = toOctString(va.getArg<unsigned short int>(), prefix);
-      else if (argTraitment == trait::asLong)
-        toBeWritten = toOctString(va.getArg<unsigned long int>(), prefix);
-      else if (argTraitment == trait::asLongLong)
-        toBeWritten = toOctString(va.getArg<unsigned long long int>(), prefix);
-      else if (argTraitment == trait::asIntmax_t)
-        toBeWritten = toOctString(va.getArg<uintmax_t>(), prefix);
-      else if (argTraitment == trait::asSize_t)
-        toBeWritten = toOctString(va.getArg<size_t>(), prefix);
-      else if (argTraitment == trait::asPtrdiff_t)
-        toBeWritten = toOctString(va.getArg<uptrdiff_t>(), prefix);
+      if (argTraitment == Trait::Regular)
+        toBeWritten = ToOctString(va.getArg<unsigned int>(), prefix);
+      else if (argTraitment == Trait::AsChar)
+        toBeWritten = ToOctString(va.getArg<unsigned char>(), prefix);
+      else if (argTraitment == Trait::AsShort)
+        toBeWritten = ToOctString(va.getArg<unsigned short int>(), prefix);
+      else if (argTraitment == Trait::AsLong)
+        toBeWritten = ToOctString(va.getArg<unsigned long int>(), prefix);
+      else if (argTraitment == Trait::AsLongLong)
+        toBeWritten = ToOctString(va.getArg<unsigned long long int>(), prefix);
+      else if (argTraitment == Trait::AsIntmaxT)
+        toBeWritten = ToOctString(va.getArg<uintmax_t>(), prefix);
+      else if (argTraitment == Trait::AsSizeT)
+        toBeWritten = ToOctString(va.getArg<size_t>(), prefix);
+      else if (argTraitment == Trait::AsPtrdiffT)
+        toBeWritten = ToOctString(va.getArg<tUPtrDiff>(), prefix);
 
       argFlags = ArgFlag::Integral | ArgFlag::Octal;
     }
     else if (*str == 'p')
     {
-      if (void *addr = va.getArg<void *>(); addr != nullptr)
+      if (void *p = va.getArg<void *>(); p != nullptr)
       {
-        toBeWritten = toHexString(reinterpret_cast<uintptr_t>(addr), false, true);
+        toBeWritten = ToHexString(reinterpret_cast<uintptr_t>(p), false, true);
         argFlags = ArgFlag::Integral | ArgFlag::Hexadecimal;
       }
       else
@@ -198,7 +219,7 @@ int ostream::vprintf(const char *str, va_list args) noexcept
     }
     else if ((*str == 'f') || (*str == 'F'))
     {
-      toBeWritten = toString(va.getArg<float>());
+      toBeWritten = ToString(va.getArg<float>());
 
       argFlags = ArgFlag::Signed | ArgFlag::FloatingPoint;
     }
@@ -215,21 +236,21 @@ int ostream::vprintf(const char *str, va_list args) noexcept
     }
     else if (*str == 'n')
     {
-      if (argTraitment == trait::regular)
+      if (argTraitment == Trait::Regular)
         *va.getArg<int *>() = written;
-      else if (argTraitment == trait::asChar)
+      else if (argTraitment == Trait::AsChar)
         *va.getArg<signed char *>() = static_cast<signed char>(written);
-      else if (argTraitment == trait::asShort)
+      else if (argTraitment == Trait::AsShort)
         *va.getArg<signed short *>() = static_cast<signed short>(written);
-      else if (argTraitment == trait::asLong)
+      else if (argTraitment == Trait::AsLong)
         *va.getArg<long int *>() = static_cast<long int>(written);
-      else if (argTraitment == trait::asLongLong)
+      else if (argTraitment == Trait::AsLongLong)
         *va.getArg<long long int *>() = static_cast<long long int>(written);
-      else if (argTraitment == trait::asIntmax_t)
+      else if (argTraitment == Trait::AsIntmaxT)
         *va.getArg<intmax_t *>() = static_cast<intmax_t>(written);
-      else if (argTraitment == trait::asSize_t)
-        *va.getArg<size_t *>() = static_cast<ssize_t>(written);
-      else if (argTraitment == trait::asPtrdiff_t)
+      else if (argTraitment == Trait::AsSizeT)
+        *va.getArg<size_t *>() = static_cast<tSSize>(written);
+      else if (argTraitment == Trait::AsPtrdiffT)
         *va.getArg<ptrdiff_t *>() = static_cast<ptrdiff_t>(written);
     }
     else if (*str == '%')
@@ -238,11 +259,11 @@ int ostream::vprintf(const char *str, va_list args) noexcept
     }
     else
     {
-      written += write(formatBegin, static_cast<size_type>(str + 1 - formatBegin));
+      written += write(formatBegin, static_cast<tSize>(str + 1 - formatBegin));
     }
 
     if (!toBeWritten.empty())
-      written += formattingIsRequired(formatOptions) ? writeFormatted(toBeWritten, formatOptions, argFlags) :
+      written += FormattingIsRequired(formatOptions) ? writeFormatted(toBeWritten, formatOptions, argFlags) :
                                                        write(toBeWritten);
 
     ++str;
@@ -252,7 +273,7 @@ int ostream::vprintf(const char *str, va_list args) noexcept
   return written;
 }
 
-int ostream::printf(const char *str, ...) noexcept
+int OStream::printf(const char *str, ...)
 {
   va_list args;
   int retval;
@@ -264,82 +285,130 @@ int ostream::printf(const char *str, ...) noexcept
   return retval;
 }
 
-template <typename int_t, std::enable_if_t<std::is_integral_v<int_t>, bool>>
-ostream & ostream::operator<<(int_t value) noexcept
+template <typename T, EnableIfT<IsIntegralV<T>>>
+OStream & OStream::operator<<(T value)
 {
-  write(toString(value));
+  write(ToString(value));
   return *this;
 }
 
-template <typename float_t, std::enable_if_t<std::is_floating_point_v<float_t>, bool>>
-ostream & ostream::operator<<(float_t value) noexcept
+template <typename T, EnableIfT<IsFloatingPointV<T>>>
+OStream & OStream::operator<<(T value)
 {
-  write(toString(value));
+  write(ToString(value));
   return *this;
 }
 
-ostream & ostream::operator<<(bool value) noexcept
+OStream & OStream::operator<<(bool value)
 {
   write(value ? "true"sv : "false"sv);
   return *this;
 }
 
-ostream & ostream::operator<<(char value) noexcept
+OStream & OStream::operator<<(char value)
 {
   write(value);
   return *this;
 }
 
-ostream & ostream::operator<<(char *str) noexcept
+OStream & OStream::operator<<(char *str)
 {
   if (str != nullptr)
     write(std::string_view{str});
   return *this;
 }
 
-ostream & ostream::operator<<(const char *str) noexcept
+OStream & OStream::operator<<(const char *str)
 {
   if (str != nullptr)
     write(std::string_view{str});
   return *this;
 }
 
-ostream & ostream::operator<<(std::string_view str) noexcept
+OStream & OStream::operator<<(std::string_view str)
 {
   write(str);
   return *this;
 }
 
-ostream & ostream::operator<<(const void *addr) noexcept
+OStream & OStream::operator<<(std::nullptr_t)
 {
-  write(toHexString(reinterpret_cast<uintptr_t>(addr), false, true));
+  write("nullptr"sv);
   return *this;
 }
 
-ostream & ostream::operator<<(manip_func &function) noexcept
+OStream & OStream::operator<<(const void *p)
+{
+  write(ToHexString(reinterpret_cast<uintptr_t>(p), false, true));
+  return *this;
+}
+
+OStream & OStream::operator<<(ManipFunc &function)
 {
   return function(*this);
 }
 
-ostream & flush(ostream &stream) noexcept
+inline OStream::tSize OStream::_write(const char *str, tSize len)
+{
+  return (this->*write_.external)(str, len);
+}
+
+OStream::tSize OStream::staticWrite(const char *str, tSize len)
+{
+  return (*write_.staticFunc)(str, len);
+}
+
+OStream::tSize OStream::memberWrite(const char *str, tSize len)
+{
+  return (*write_.memberFunc)(obj_, str, len);
+}
+
+OStream::tSize OStream::dummyWrite(const char *str, tSize len)
+{
+  static_cast<void>(str);
+  static_cast<void>(len);
+  return 0u;
+}
+
+inline void OStream::_flush(void)
+{
+  (this->*flush_.external)();
+}
+
+void OStream::staticFlush(void)
+{
+  (*flush_.staticFunc)();
+}
+
+void OStream::memberFlush(void)
+{
+  (flush_.memberFunc)(obj_);
+}
+
+void OStream::dummyFlush(void)
+{
+  /* Do nothing */;
+}
+
+OStream & Flush(OStream &stream)
 {
   stream.flush();
 
   return stream;
 }
 
-ostream & endl(ostream &stream) noexcept
+OStream & Endl(OStream &stream)
 {
-  stream.write(FMT_ENDL, static_cast<ostream::size_type>(sizeof(FMT_ENDL) - 1U));
+  stream.write(FMT_ENDL, static_cast<OStream::tSize>(sizeof(FMT_ENDL) - 1u));
   stream.flush();
 
   return stream;
 }
 
-#define INSTANCIATE_TEMPLATE(TYPE) template ostream & ostream::operator<<(TYPE) noexcept
-#define INSTANCIATE_INTEGRAL
-#define INSTANCIATE_FLOATING_POINT
-#include "instanciate_template.hpp"
-#undef INSTANCIATE_TEMPLATE
+#define FMT_INSTANCIATE_TEMPLATE(TYPE) template OStream & OStream::operator<<(TYPE)
+#define FMT_INSTANCIATE_INTEGRAL
+#define FMT_INSTANCIATE_FLOATING_POINT
+#include "fmt/instanciate_template.hpp"
+#undef FMT_INSTANCIATE_TEMPLATE
 
-} // namespace fmt
+FMT_END_NAMESPACE

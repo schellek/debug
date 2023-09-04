@@ -1,11 +1,9 @@
 #include <cstring>
 #include <cctype>
 
-#include "format_options.hpp"
+#include "fmt/format_options.hpp"
 
-
-namespace fmt
-{
+FMT_BEGIN_NAMESPACE
 
 static constexpr FormatOptions DEFAULT_FORMATTING =
 {
@@ -13,12 +11,12 @@ static constexpr FormatOptions DEFAULT_FORMATTING =
   FormatOptions::NOT_SPECIFIED, FormatOptions::NOT_SPECIFIED
 };
 
-static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept;
-static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept;
-static const char * parseFlag(const char *str, FormatOptions &formatOptions) noexcept;
+static const char * parseFlags(const char *str, FormatOptions &formatOptions);
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions);
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions);
+static const char * parseFlag(const char *str, FormatOptions &formatOptions);
 
-const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+const char * ParseFormatOptions(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   std::memcpy(&formatOptions, &DEFAULT_FORMATTING, sizeof(FormatOptions));
 
@@ -29,50 +27,50 @@ const char * parseFormatOptions(const char *str, VaList &args, FormatOptions &fo
   return str;
 }
 
-const char * parseArgTraitment(const char *str, trait &argTraitment) noexcept
+const char * ParseArgTraitment(const char *str, Trait &argTraitment)
 {
-  argTraitment = trait::regular;
+  argTraitment = Trait::Regular;
 
   while (*str == 'h')
   {
-    if (argTraitment == trait::regular)
-      argTraitment = trait::asShort;
-    else if (argTraitment == trait::asShort)
-      argTraitment = trait::asChar;
+    if (argTraitment == Trait::Regular)
+      argTraitment = Trait::AsShort;
+    else if (argTraitment == Trait::AsShort)
+      argTraitment = Trait::AsChar;
     else
-      argTraitment = trait::asInvalid;
+      argTraitment = Trait::AsInvalid;
 
     ++str;
   }
 
   while (*str == 'l')
   {
-    if (argTraitment == trait::regular)
-      argTraitment = trait::asLong;
-    else if (argTraitment == trait::asLong)
-      argTraitment = trait::asLongLong;
+    if (argTraitment == Trait::Regular)
+      argTraitment = Trait::AsLong;
+    else if (argTraitment == Trait::AsLong)
+      argTraitment = Trait::AsLongLong;
     else
-      argTraitment = trait::asInvalid;
+      argTraitment = Trait::AsInvalid;
 
     ++str;
   }
 
   if (*str == 'j')
-    argTraitment = (++str, (argTraitment == trait::regular) ? trait::asIntmax_t : trait::asInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsIntmaxT : Trait::AsInvalid);
   else if (*str == 'z')
-    argTraitment = (++str, (argTraitment == trait::regular) ? trait::asSize_t : trait::asInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsSizeT : Trait::AsInvalid);
   else if (*str == 't')
-    argTraitment = (++str, (argTraitment == trait::regular) ? trait::asPtrdiff_t : trait::asInvalid);
+    argTraitment = (++str, (argTraitment == Trait::Regular) ? Trait::AsPtrdiffT : Trait::AsInvalid);
 
   return str;
 }
 
-bool formattingIsRequired(const FormatOptions &formatOptions) noexcept
+bool FormattingIsRequired(const FormatOptions &formatOptions)
 {
   return (std::memcmp(&formatOptions, &DEFAULT_FORMATTING, sizeof(FormatOptions)) != 0);
 }
 
-static const char * parseFlags(const char *str, FormatOptions &formatOptions) noexcept
+static const char * parseFlags(const char *str, FormatOptions &formatOptions)
 {
   const char *preParse, *postParse = str;
 
@@ -85,7 +83,7 @@ static const char * parseFlags(const char *str, FormatOptions &formatOptions) no
   return postParse;
 }
 
-static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+static const char * parseWidth(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   const char *preParse = str;
   int fieldWidth = 0;
@@ -108,7 +106,7 @@ static const char * parseWidth(const char *str, VaList &args, FormatOptions &for
   return str;
 }
 
-static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions) noexcept
+static const char * parsePrecision(const char *str, VaList &args, FormatOptions &formatOptions)
 {
   const char *preParse = str;
   int precision = 0;
@@ -141,7 +139,7 @@ static const char * parsePrecision(const char *str, VaList &args, FormatOptions 
   return str;
 }
 
-static const char * parseFlag(const char *str, FormatOptions &formatOptions) noexcept
+static const char * parseFlag(const char *str, FormatOptions &formatOptions)
 {
   bool flagSpecified = true;
 
@@ -164,4 +162,4 @@ static const char * parseFlag(const char *str, FormatOptions &formatOptions) noe
   return str;
 }
 
-} // namespace fmt
+FMT_END_NAMESPACE
