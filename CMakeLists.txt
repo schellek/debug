@@ -5,10 +5,7 @@ set(FMT_LIB fmt)
 
 add_library(${FMT_LIB} STATIC)
 
-set_property(TARGET ${FMT_LIB}
-  PROPERTY CXX_STANDARD 17
-  PROPERTY CXX_STANDARD_REQUIRED ON
-)
+target_compile_features(${FMT_LIB} PUBLIC cxx_std_17)
 
 target_sources(${FMT_LIB}
   PRIVATE
