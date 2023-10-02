@@ -93,8 +93,8 @@ union FloatingPoint
 {
 public:
   using tFloat  = T;
-  using tUInt   = UnsignedtInt<sizeof(tFloat)>;
-  using tInt    = SignedtInt<sizeof(tFloat)>;
+  using tUInt   = UnsignedIntT<sizeof(tFloat)>;
+  using tInt    = SignedIntT<sizeof(tFloat)>;
   using tLayout = FloatingPointLayout<T>;
   static_assert(tLayout::isValid());
 

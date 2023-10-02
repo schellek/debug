@@ -362,19 +362,19 @@ struct SignedInt<16u> { using Type = FmtInt128; };
 #endif
 
 template <size_t W>
-using SignedtInt = typename SignedInt<W>::Type;
+using SignedIntT = typename SignedInt<W>::Type;
 
 template <typename T>
 struct __MakeSigned : SignedInt<sizeof(T)> {};
 
 template <typename T>
-struct __MakeSigned<const T> { using Type = const SignedtInt<sizeof(T)>; };
+struct __MakeSigned<const T> { using Type = const SignedInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeSigned<volatile T> { using Type = volatile SignedtInt<sizeof(T)>; };
+struct __MakeSigned<volatile T> { using Type = volatile SignedInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeSigned<const volatile T> { using Type = const volatile SignedtInt<sizeof(T)>; };
+struct __MakeSigned<const volatile T> { using Type = const volatile SignedInt<sizeof(T)>; };
 
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
 using _MakeSigned = __MakeSigned<T>;
@@ -418,19 +418,19 @@ struct UnsignedInt<16u> { using Type = FmtUInt128; };
 #endif
 
 template <size_t W>
-using UnsignedtInt = typename UnsignedInt<W>::Type;
+using UnsignedIntT = typename UnsignedInt<W>::Type;
 
 template <typename T>
 struct __MakeUnsigned : UnsignedInt<sizeof(T)> {};
 
 template <typename T>
-struct __MakeUnsigned<const T> { using Type = const UnsignedtInt<sizeof(T)>; };
+struct __MakeUnsigned<const T> { using Type = const UnsignedInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeUnsigned<volatile T> { using Type = volatile UnsignedtInt<sizeof(T)>; };
+struct __MakeUnsigned<volatile T> { using Type = volatile UnsignedInt<sizeof(T)>; };
 
 template <typename T>
-struct __MakeUnsigned<const volatile T> { using Type = const volatile UnsignedtInt<sizeof(T)>; };
+struct __MakeUnsigned<const volatile T> { using Type = const volatile UnsignedInt<sizeof(T)>; };
 
 template <typename T, EnableIfT<IsIntegralV<T>> = true>
 using _MakeUnsigned = __MakeUnsigned<T>;
