@@ -1,5 +1,5 @@
-project(FMT C CXX)
 cmake_minimum_required(VERSION 3.17)
+project(FMT C CXX)
 
 set(FMT_LIB fmt)
 
