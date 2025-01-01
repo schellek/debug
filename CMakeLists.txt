@@ -20,14 +20,12 @@ target_sources(${FMT_LIB}
 target_include_directories(${FMT_LIB}
   PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}/Inc/private
+  ${CMAKE_CURRENT_LIST_DIR}/Inc/public
 )
 
-include(fmt.cmake)
-fmt_include_directories(${FMT_LIB})
-fmt_compile_definitions(${FMT_LIB})
-
-if(DEFINED MAIN_TARGET)
-  fmt_include_directories(${MAIN_TARGET})
-  fmt_compile_definitions(${MAIN_TARGET})
-  target_link_libraries(${MAIN_TARGET} fmt)
+if(DEFINED FMT_ENDL)
+  target_compile_definitions(${FMT_LIB}
+    PUBLIC
+    "FMT_ENDL=\"${FMT_ENDL}\""
+  )
 endif()
